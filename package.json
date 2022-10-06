@@ -1,6 +1,6 @@
 {
   "private": false,
-  "name": "cookie-consent",
+  "name": "@masth0/cookie-consent",
   "author": "Masth0",
   "license": "MIT",
   "version": "1.0.0",
