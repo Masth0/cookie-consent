@@ -1,10 +1,25 @@
 {
-  "name": "cookies-consent",
   "private": true,
-  "version": "0.0.0",
+  "name": "cookie-consent",
+  "author": "Masth0",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "Cookie consent",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Masth0/cookie-consent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Masth0/cookie-consent/issues"
+  },
+  "homepage": "https://github.com/Masth0/cookie-consent#readme",
+  "main": "dist/cookie-consent.es.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && cp ./src/style.css dist/style.css",
     "preview": "vite preview"
   },
   "devDependencies": {

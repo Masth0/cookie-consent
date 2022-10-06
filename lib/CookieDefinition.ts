@@ -98,7 +98,8 @@ export class CookieDefinition {
 
           if (cookie) {
             const expireDate = new Date('1970');
-            document.cookie = `${cookie.name}=; expires=${expireDate.toUTCString()}; Domain=${window.location.host.split(':')[0]}; Max-Age=0; path=/;`;
+            let domain: string = location.hostname.replace('www', '');
+            document.cookie = `${cookie.name}=; expires=${expireDate.toUTCString()}; Domain=${domain}; Max-Age=0; path=/;`;
           }
 
         }
@@ -134,6 +135,7 @@ export interface CookieDefinitionConfig {
   categoryName?: string;
   name: string;
   description: string;
+  domain?: string;
   revocable: boolean;
   accepted: boolean;
   scripts: HTMLScriptElement[];

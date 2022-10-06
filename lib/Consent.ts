@@ -4,7 +4,6 @@ import {getCookieValue} from "./utils";
 import {CookieDefinition} from "./CookieDefinition";
 
 
-// TODO ajouter le focus trap
 export class Consent {
   #cookieToken: string = '_cookie_consent';
   private UI: ConsentUI;
@@ -93,7 +92,6 @@ export class Consent {
     }
 
   }
-
 
   private updateConsentFromStorage(data: UserConsent) {
     data.cookies.forEach((cookieSaved: CookieSaved) => {

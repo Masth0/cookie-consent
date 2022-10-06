@@ -1,0 +1,3 @@
+# Cookie consent
+
+Documentation coming soon...
