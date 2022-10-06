@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "name": "cookie-consent",
   "author": "Masth0",
   "license": "MIT",
