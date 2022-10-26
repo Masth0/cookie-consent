@@ -36,7 +36,7 @@ export class ConsentUI {
   }
 
   show() {
-    this.showElement(this.container);
+    ConsentUI.showElement(this.container);
     // this.container.setAttribute('tabindex', '1');
     setTimeout(() => {
       this.trap.activate();
@@ -44,7 +44,7 @@ export class ConsentUI {
   }
 
   hide() {
-    this.hideElement(this.container);
+    ConsentUI.hideElement(this.container);
     // this.container.setAttribute('tabindex', '-1');
     this.trap.deactivate();
   }
@@ -150,17 +150,17 @@ export class ConsentUI {
           const $body = this.container.querySelector('.cc_body');
           if ($body && $body.hasAttribute('hidden')) {
             $btn.innerText = this.translations.btn.closeParams[this.locale];
-            this.showElement($body);
+            ConsentUI.showElement($body);
             $body.querySelector('button')?.focus();
-            if ($btnSaveSelection !== null) this.showElement($btnSaveSelection);
-            if ($btnSaveAll !== null) this.hideElement($btnSaveAll);
+            if ($btnSaveSelection !== null) ConsentUI.showElement($btnSaveSelection);
+            if ($btnSaveAll !== null) ConsentUI.hideElement($btnSaveAll);
             const firstCategoryBtn: HTMLButtonElement|null = $btn.querySelector('button');
             firstCategoryBtn?.focus();
           } else {
             $btn.innerText = this.translations.btn.params[this.locale];
-            if ($body !== null) this.hideElement($body);
-            if ($btnSaveSelection !== null) this.hideElement($btnSaveSelection);
-            if ($btnSaveAll !== null) this.showElement($btnSaveAll);
+            if ($body !== null) ConsentUI.hideElement($body);
+            if ($btnSaveSelection !== null) ConsentUI.hideElement($btnSaveSelection);
+            if ($btnSaveAll !== null) ConsentUI.showElement($btnSaveAll);
           }
         })
       })
@@ -243,16 +243,23 @@ export class ConsentUI {
     container.appendChild(inner);
     btn.addEventListener('click', function(e) {
       e.preventDefault();
-      const list = btn.nextElementSibling;
+      const list = <HTMLElement>btn.nextElementSibling;
       if (list && list.hasAttribute('hidden')) {
         this.classList.add('is-open');
-        list.removeAttribute('hidden');
-        list.setAttribute('aria-hidden', 'false');
+        ConsentUI.showElement(list);
         list.querySelector('input')?.focus();
+        list.addEventListener('animationend', function _func(e) {
+          if (e.animationName === 'fadeIn') {
+            list.querySelector('input')?.classList.remove('cc-disable-anim');
+            list.removeEventListener('animationend', _func);
+          }
+        }, false);
       } else {
         this.classList.remove('is-open');
-        list?.setAttribute('hidden', '');
-        list?.setAttribute('aria-hidden', 'true');
+        list.querySelector('input')?.classList.add('cc-disable-anim');
+        if (list) {
+          ConsentUI.hideElement(list);
+        }
       }
     })
 
@@ -282,6 +289,7 @@ export class ConsentUI {
     checkbox.ariaLabel = cookie.name;
     checkbox.disabled = !cookie.isRevocable;
     checkbox.readOnly = !cookie.isRevocable;
+    checkbox.classList.add('cc-disable-anim');
     if (cookie.isAccepted || !cookie.isRevocable) checkbox.setAttribute('checked', 'checked');
 
     descriptionCol.appendChild(checkbox);
@@ -314,13 +322,15 @@ export class ConsentUI {
     return el;
   }
 
-  private hideElement(element: HTMLElement|Element) {
+  private static hideElement(element: HTMLElement|Element) {
     element.setAttribute('hidden', '');
+    element.classList.remove('is-open');
     element.setAttribute('aria-hidden', 'true');
   }
 
-  private showElement(element: HTMLElement|Element) {
+  private static showElement(element: HTMLElement|Element) {
     element.removeAttribute('hidden');
+    element.classList.add('is-open');
     element.setAttribute('aria-hidden', 'false');
   }
 
