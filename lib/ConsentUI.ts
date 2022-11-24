@@ -276,7 +276,8 @@ export class ConsentUI {
     const container: HTMLElement = document.createElement('div');
     container.classList.add('cc_cookie');
 
-    const descriptionCol: HTMLElement = document.createElement('div');
+    const switchContainer: HTMLElement = document.createElement('div');
+    switchContainer.classList.add('cc_switch_container');
 
     const description: HTMLElement = document.createElement('p');
     description.classList.add('cc_description');
@@ -299,9 +300,8 @@ export class ConsentUI {
     checkbox.classList.add('cc-disable-anim');
     if (cookie.isAccepted || !cookie.isRevocable) checkbox.setAttribute('checked', 'checked');
 
-    descriptionCol.appendChild(checkbox);
-    descriptionCol.appendChild(choiceLabel);
-    descriptionCol.appendChild(description);
+    switchContainer.appendChild(checkbox);
+    switchContainer.appendChild(choiceLabel);
 
     checkbox.addEventListener('change', (e) => {
       e.preventDefault();
@@ -314,7 +314,8 @@ export class ConsentUI {
       this.container.dispatchEvent(onChoiceChange);
     });
 
-    container.appendChild(descriptionCol);
+    container.appendChild(switchContainer);
+    container.appendChild(description);
 
     return container;
   }

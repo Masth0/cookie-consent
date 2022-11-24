@@ -165,25 +165,11 @@
 
 .cc_cookie {
   position: relative;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
   padding: 8px 0;
 }
 
 .cc_category li + li .cc_cookie {
   border-top: 1px solid lightgrey;
-}
-
-.cc_cookie > * {
-  flex-grow: 1;
-  flex-shrink: 1;
-}
-
-.cc_cookie > * + * {
-  text-align: right;
-  padding-left: 16px;
 }
 
 .cc_cookie .cc_description {
@@ -211,6 +197,10 @@
 .cc_category_inner.is-open {
   display: block;
   animation: fadeIn ease-out 600ms;
+}
+
+.cc_category_inner > ul {
+  margin-top: 0;
 }
 
 .cc_btn {
@@ -265,21 +255,27 @@
 
 .cc_btn:focus-visible,
 .cc_category > button:focus-visible,
-.cc_cookie input[type="checkbox"]:focus-visible + label {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch:focus-visible + label {
   outline: none;
   box-shadow: 0 0 0 3px var(--cc-color-focus);
 }
 
 /* Switch box */
-.cc_cookie input[type="checkbox"] {
+.cc_switch_container {
+  position: relative;
+  width: 100%;
+}
+
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch {
   opacity: 0;
   position: absolute;
   text-indent: -9999px;
 }
 
-.cc_cookie input[type="checkbox"] + label {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch + label {
   position: relative;
   display: block;
+  padding-left: 0;
   padding-right: 50px;
   padding-top: 5px;
   padding-bottom: 5px;
@@ -287,7 +283,7 @@
   cursor: pointer;
 }
 
-.cc_cookie input[type="checkbox"] + label::before {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch + label::before {
   content: '';
   position: absolute;
   display: inline-block;
@@ -302,7 +298,7 @@
   transition: background-color ease 300ms;
 }
 
-.cc_cookie input[type="checkbox"] + label::after {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch + label::after {
   content: '';
   position: absolute;
   display: inline-block;
@@ -318,11 +314,11 @@
   transition: all ease 300ms;
 }
 
-.cc_cookie input[type="checkbox"]:checked + label::before {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch:checked + label::before {
   background-color: var(--cc-color-primary);
 }
 
-.cc_cookie input[type="checkbox"]:checked + label::after {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch:checked + label::after {
   content: '';
   right: 1px;
   border-color: var(--cc-color-primary);
@@ -330,12 +326,17 @@
   animation: moveToRight ease 400ms;
 }
 
-.cc_cookie input[type="checkbox"]:disabled + label {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch:disabled + label {
   cursor: not-allowed;
 }
 
-.cc_cookie input[type="checkbox"]:disabled + label::before,
-.cc_cookie input[type="checkbox"]:disabled + label::after {
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch:disabled:focus-visible + label {
+  outline: none;
+  box-shadow: none;
+}
+
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch:disabled + label::before,
+.cc_cookie .cc_switch_container input[type="checkbox"].cc_switch:disabled + label::after {
   opacity: 0.5;
 }
 
