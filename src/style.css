@@ -42,15 +42,15 @@
   --cc-btn-continue-color-hover: #212121;
   --cc-btn-continue-bg-hover: #e5e5f1;
   /*// Btn Allow*/
-  --cc-btn-allow-color: #212121;
-  --cc-btn-allow-bg: #d5d5e0;
-  --cc-btn-allow-color-hover: #c3c3ce;
-  --cc-btn-allow-bg-hover: #212121;
+  --cc-btn-allow-color: #ffffff;
+  --cc-btn-allow-bg: #0048BA;
+  --cc-btn-allow-color-hover: #ffffff;
+  --cc-btn-allow-bg-hover: #6486cc;
   /*// btn Deny*/
   --cc-btn-deny-color: #212121;
-  --cc-btn-deny-bg: #d5d5e0;
+  --cc-btn-deny-bg: #f3d5d5;
   --cc-btn-deny-color-hover: #212121;
-  --cc-btn-deny-bg-hover: #c3c3ce;
+  --cc-btn-deny-bg-hover: #d9a2a2;
   --cc-radius: 6px;
 }
 
@@ -223,6 +223,7 @@
 .cc_topbar .cc_btn[data-cc-reject] {
   min-height: 1em;
   background-color: var(--cc-btn-continue-bg);
+  color: var(--cc-btn-continue-color);
   border-top-left-radius: 0;
   border-bottom-right-radius: 0;
 }
@@ -230,27 +231,32 @@
 .cc_topbar .cc_btn[data-cc-reject]:hover,
 .cc_topbar .cc_btn[data-cc-reject]:focus-visible {
   background-color: var(--cc-btn-continue-bg-hover);
+  color: var(--cc-btn-continue-color-hover);
 }
 
 .cc_btn[data-cc-reject] {
   background-color: var(--cc-btn-deny-bg);
+  color: var(--cc-btn-deny-color);
 }
 
 .cc_btn[data-cc-reject]:hover,
 .cc_btn[data-cc-reject]:focus-visible {
   background-color: var(--cc-btn-deny-bg-hover);
+  color: var(--cc-btn-deny-color-hover);
 }
 
 .cc_btn[data-cc-save-all],
 .cc_btn[data-cc-save] {
-  background-color: var(--cc-btn-deny-bg);
+  background-color: var(--cc-btn-allow-bg);
+  color: var(--cc-btn-allow-color);
 }
 
 .cc_btn[data-cc-save-all]:hover,
 .cc_btn[data-cc-save-all]:focus-visible,
 .cc_btn[data-cc-save]:hover,
 .cc_btn[data-cc-save]:focus-visible {
-  background-color: var(--cc-btn-deny-bg-hover);
+  background-color: var(--cc-btn-allow-bg-hover);
+  color: var(--cc-btn-allow-color-hover);
 }
 
 .cc_btn:focus-visible,
