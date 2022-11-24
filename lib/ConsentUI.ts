@@ -250,13 +250,19 @@ export class ConsentUI {
         list.querySelector('input')?.focus();
         list.addEventListener('animationend', function _func(e) {
           if (e.animationName === 'fadeIn') {
-            list.querySelector('input')?.classList.remove('cc-disable-anim');
+            const choices = Array.from(list.querySelectorAll('input.cc_switch'));
+            for (const choice of choices) {
+              choice.classList.remove('cc-disable-anim');
+            }
             list.removeEventListener('animationend', _func);
           }
         }, false);
       } else {
         this.classList.remove('is-open');
-        list.querySelector('input')?.classList.add('cc-disable-anim');
+        const choices = Array.from(list.querySelectorAll('input.cc_switch'));
+        for (const choice of choices) {
+          choice.classList.add('cc-disable-anim');
+        }
         if (list) {
           ConsentUI.hideElement(list);
         }
@@ -286,6 +292,7 @@ export class ConsentUI {
     checkbox.name = cookie.name;
     checkbox.value = cookie.name;
     checkbox.id = cookie.id;
+    checkbox.classList.add('cc_switch');
     checkbox.ariaLabel = cookie.name;
     checkbox.disabled = !cookie.isRevocable;
     checkbox.readOnly = !cookie.isRevocable;
