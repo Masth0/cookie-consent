@@ -168,60 +168,37 @@ export const UITranslationsDefault = {
   },
   categories: {
     mandatory: {
-      title: {
+      name: {
         fr: 'Obligatoire',
         en: 'Mandatory',
         de: 'Erforderlich'
       },
       description: {
-        fr: 'Cookies requis pour le bon fonctionnement du site.',
-        en: 'We use required cookies to perform essential website functions.',
-        de: ''
+        fr: 'Permet de connaitre l\'identifiant de session. La session est utilisée pour la navigation et la sécurité des formulaires.',
+        en: 'Allows to know the session identifier. The session is used for navigation and form security.',
+        de: 'Ermöglicht es, die Sitzungs-ID zu erfahren. Die Sitzung wird für die Navigation und die Formularsicherheit.'
       }
     }
-  }
-};
-
-
-/*
-
-import CookieConsent from '@masth0/cookie-consent';
-
-// Cookie consent
-const locale = document.documentElement.getAttribute('lang') || 'en';
-const consentTranslations = CookieConsent.UITranslationsDefault;
-consentTranslations.title.de = "Wir verwenden Cookies"
-consentTranslations.description = {
-  fr: "Nous utilisons des cookies pour nous assurer du bon fonctionnement de notre site, pour personnaliser notre contenu et nos publicit\xE9s et afin d\u2019analyser notre trafic. En utilisant ce site Internet ou en fermant ce bandeau, vous consentez \xE0 l'utilisation de ces cookies.",
-  en: "We use cookies to make sure our website works properly, to personalise our content and advertising and to analyse our traffic. By using this website or closing this banner, you consent to the use of these cookies.",
-  de: "Wir verwenden Cookies, um sicherzustellen, dass unsere Website ordnungsgemäß funktioniert, um unseren Inhalt und unsere Werbung zu personalisieren und um unseren Datenverkehr zu analysieren. Durch die Nutzung dieser Website oder das Schließen dieses Banners stimmen Sie der Verwendung dieser Cookies zu."
-};
-consentTranslations.btn.continue.de = 'fortsetzen ohne akzeptieren';
-consentTranslations.btn.reject = {
-  fr: "Je refuse",
-  en: "Deny",
-  de: "ablehnen"
-};
-consentTranslations.btn.saveAll = {
-  fr: "J'accepte",
-  en: "Accept",
-  de: "Alle akzeptieren"
-};
-consentTranslations.btn.continue.de = "Ohne Zustimmung fortfahren";
-consentTranslations.btn.params.de = "Präferenzen verwalten";
-consentTranslations.btn.closeParams.de = "Präferenzen schliessen";
-consentTranslations.btn.save.de = "Auswahl speichern";
-consentTranslations.btn.closeParams.en = "Close preferences";
-
-const translations = {
-  mandatoryCategory: {
-    title: {
-      fr: 'Obligatoire',
-      en: 'Mandatory',
-      de: 'Erforderlich'
-    },
   },
-  sessionId: {
+};
+
+export const PhpsessidTranslations = {
+  fr: {
+    title: 'Identifiant de session',
+    description: 'Permet de connaitre l\'identifiant de session. La session est utilisée pour la navigation et la sécurité des formulaires (CSRF) PHPSESSID',
+  },
+  en: {
+    title: 'Session ID',
+    description: 'Allows to know the session identifier. The session is used for navigation and form security (CSRF) PHPSESSID',
+  },
+  de: {
+    title: 'Sitzung ID',
+    description: 'Ermöglicht es, die Sitzungs-ID zu erfahren. Die Sitzung wird für die Navigation und die Formularsicherheit (CSRF) verwendet PHPSESSID',
+  },
+};
+
+export const translationsServices = {
+  phpsessid: {
     fr: {
       title: 'Identifiant de session',
       description: 'Permet de connaitre l\'identifiant de session. La session est utilisée pour la navigation et la sécurité des formulaires (CSRF) PHPSESSID',
@@ -234,36 +211,35 @@ const translations = {
       title: 'Sitzung ID',
       description: 'Ermöglicht es, die Sitzungs-ID zu erfahren. Die Sitzung wird für die Navigation und die Formularsicherheit (CSRF) verwendet PHPSESSID',
     },
+  },
+  google_tag_manager: {
+    tokens: ['_ga', '_gid', '_gcl_au', '_gat_*', '_ga_*'],
+    fr: {
+      title: 'Google Tag Manager',
+      description: 'Permet l\'ajout des balises de suivi tel que Google Analytics, Google Ads... De suivre facilement les performances des balises, les conversions des publicités sur le site web.'
+    },
+    en: {
+      title: 'Google Tag Manager',
+      description: 'Allows adding tracking tags such as Google Analytics, Google Ads, etc. to easily track the performance of the tags and the conversion of ads on the website.'
+    },
+    de: {
+      title: 'Google Tag Manager',
+      description: 'Erlaubt das Hinzufügen von Tracking-Tags wie Google Analytics, Google Ads usw. um die Leistung der Tags und die Konversion von Anzeigen auf der Website einfach zu verfolgen.'
+    },
+  },
+  facebook_pixel: {
+    tokens: ['_fbp'],
+    fr: {
+      title: 'Facebook Pixel',
+      description: 'Aide à vous montrer des publicités plus personnelles mais également à mesurer et à améliorer les publicités.'
+    },
+    en: {
+      title: 'Facebook Pixel',
+      description: 'Helps to show personalized ads and at the same time measure and improve the ads.'
+    },
+    de: {
+      title: 'Facebook Pixel',
+      description: 'Hilft dabei, personalisierte Werbung anzuzeigen und gleichzeitig die Werbung zu messen und zu verbessern.'
+    },
   }
 }
-
-const mandatory = CookieConsent.createCategory(translations.mandatoryCategory.title[locale], '');
-mandatory.addCookie({
-  accepted: true,
-  revocable: false,
-  name: translations.sessionId[locale].title,
-  description: translations.sessionId[locale].description,
-  scripts: [],
-  tokens: ['PHPSESSID']
-});
-
-CookieConsent.setup({
-  localeFallback: 'en',
-  version: 1,
-  categories: [
-    mandatory
-  ],
-  forceReload: true,
-  translations: consentTranslations,
-  onSave: () => {},
-  onReject: () => {},
-}).then((consent) => {
-  const $btnOpenConsent = document.querySelector('[data-cc-show]');
-  if ($btnOpenConsent) {
-    $btnOpenConsent.addEventListener('click', function() {
-      consent.show();
-    })
-  }
-});
-
-*/

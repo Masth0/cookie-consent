@@ -1,6 +1,6 @@
 import './style.css'
 import {Category} from "../lib/Category";
-import CookieConsent from "../lib";
+import CookieConsent from "../lib/index";
 
 
 const mandatory: Category = CookieConsent.createCategory('Obligatoire', '...');

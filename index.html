@@ -2,15 +2,16 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="assets/Cookie.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+    <title>Cookie consent</title>
+
+    <link rel="stylesheet" href="assets/style.css">
 
     <script type="cookie-consent"
             data-type="text/javascript"
             data-category="marketing"
-            data-name="Google Tag Manager"
-            data-description="">console.log('Google Tag Manager enabled!')</script>
+            data-name="Google Tag Manager">console.log('Google Tag Manager enabled!')</script>
     
     <script type="cookie-consent"
       data-type="text/javascript"
@@ -29,7 +30,7 @@
             data-revocable="false"
             data-accepted
             data-tokens="_recaptcha">
-      document.cookie = `_recaptcha_test=Ne doit pas être supprimé; expires=${new Date('2023').toUTCString()}; path=/;`;
+      document.cookie = `_recaptcha_test=Ne doit pas être supprimé; expires=${new Date('2024').toUTCString()}; path=/;`;
       console.log('Recaptcha cha cha!')</script>
 
       <script type="cookie-consent"
@@ -40,7 +41,15 @@
               integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI="
               crossorigin="anonymous"></script>
   </head>
+
   <body>
+
+    <div class="section">
+      <div class="wrapper">
+        <h1 class="text-center">Cookie consent</h1>
+      </div>
+    </div>
+
     <div id="app">
       <a href="/">reload</a>
       <button type="button" data-cc-show>Afficher CookiesConsent</button>
