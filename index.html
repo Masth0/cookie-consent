@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cookie consent</title>
+
+    <!-- Cookie Marketing -->
+    <script type="cookie-consent"
+            data-cc-revocable
+            data-cc-category-name="Marketing"
+            data-cc-category-description="Marketing cookies hare used to provide visitors with customized advertisements based on the pages you visited previously and to analyze the effectiveness of the ad campaigns."
+            data-cc-name="Facebook Pixel"
+            data-cc-tokens="_fbp"
+    >
+       (function() {
+            // Fake cookie
+            let expireDate = new Date();
+            expireDate.setMonth(expireDate.getMonth() + 12);
+            document.cookie = `_fbp=Accepted; expires=${expireDate.toUTCString()}; path=/; SameSite=Lax;`;
+        })();
+    </script>
+
+    <!-- Cookie Marketing -->
+    <script type="cookie-consent"
+            data-cc-category-name="Marketing"
+            data-cc-name="Google Tag Manager"
+            data-cc-description=""
+            data-cc-tokens="_gtm"
+            data-cc-revocable
+    >
+       (function() {
+             // Fake cookie
+            let expireDate = new Date();
+            expireDate.setMonth(expireDate.getMonth() + 12);
+            document.cookie = `_gtm=Accepted; expires=${expireDate.toUTCString()}; path=/; SameSite=Lax;`;
+        })();
+    </script>
+
+    <!-- Google Maps -->
+    <script type="cookie-consent"
+            data-cc-category-name="Functional"
+            data-cc-name="Google maps"
+            data-cc-category-description="Functional cookies help perform certain functionalities like sharing the content of the website on social media platforms, collecting feedback, and other third-party features."
+            data-cc-description="Google Maps is a web service that provides detailed information about geographical regions and sites worldwide"
+            data-cc-revocable
+            data-cc-tokens="OGPC"
+            src="https://maps.googleapis.com/maps/api/js"></script>
+
+</head>
+<body>
+    <button type="button" data-cc-open>Open Cookie consent</button>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

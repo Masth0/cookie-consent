@@ -1,0 +1,39 @@
+{
+  "name": "@masth0/cookie-consent",
+  "author": "Masth0",
+  "license": "MIT",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "",
+  "module": "",
+  "scripts": {
+    "prettier": "prettier \"./lib/*.ts\" --write",
+    "dev": "vite",
+    "preview": "vite preview",
+    "build:es6": "tsc && vite build",
+    "build:es5": "tsc && vite build --mode es5",
+    "build": "rm -rf ./dist/* && npm run build:es5 && npm run build:es6 && cp ./src/style.css dist/style.css"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.21.5",
+    "@babel/core": "^7.21.8",
+    "@babel/preset-env": "^7.21.5",
+    "@rollup/plugin-babel": "^6.0.3",
+    "prettier": "3.0.2",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.9"
+  },
+  "dependencies": {
+    "core-js": "^3.30.2",
+    "focus-trap": "^7.4.3"
+  },
+  "prettier": {
+    "printWidth": 150,
+    "proseWrap": "always",
+    "bracketSameLine": true
+  }
+}
