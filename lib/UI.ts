@@ -66,7 +66,7 @@ export class UI {
     this.card = createHTMLElement<HTMLDivElement>("div", {
       class: "cc_card",
       "aria-hidden": "true",
-      hidden: "",
+      hidden: "hidden",
       tabindex: "-1",
     });
     this.topBar = createHTMLElement<HTMLDivElement>("div", {
@@ -78,7 +78,7 @@ export class UI {
     this.versionInfo = createHTMLElement<HTMLParagraphElement>("p", {
       class: "cc_card_version_info",
       "aria-hidden": "true",
-      hidden: "",
+      hidden: "hidden",
     });
     this.title = createHTMLElement<HTMLParagraphElement>("p", {
       class: "cc_card_title",
@@ -88,7 +88,7 @@ export class UI {
     });
     this.body = createHTMLElement<HTMLDivElement>("div", {
       class: "cc_body",
-      hidden: "",
+      hidden: "hidden",
     });
     this.footer = createHTMLElement("div", {
       class: "cc_footer",
@@ -386,7 +386,7 @@ export class UI {
   }
 
   private static hideElement(element: HTMLElement | Element) {
-    element.setAttribute("hidden", "");
+    element.setAttribute("hidden", "hidden");
     element.classList.remove(IS_OPEN_CLASS);
     element.setAttribute("aria-hidden", "true");
   }

@@ -228,8 +228,7 @@ export class CookieConsent {
   }
 
   show() {
-    console.log('show');
-    this.UI.card.style.display = "";
+    this.UI.card.style.display = "block";
     this.UI.card.removeAttribute("hidden");
     this.UI.card.setAttribute("aria-hidden", "false");
     this.UI.card.setAttribute("tabindex", "0");
