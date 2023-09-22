@@ -2,6 +2,7 @@ import { Category } from "./Category.ts";
 import { Cookie } from "./Cookie.ts";
 import { ConsentMessages } from "./Translations.ts";
 import { createCustomEvent, strToId } from "./utils.ts";
+import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 
 const FADE_IN_ANIMATION_TOKEN: string = "cc-open-animation";
 const ANIMATION_DISABLED_CLASS: string = "cc-animation-disabled";
@@ -22,15 +23,6 @@ enum DatasetActionUI {
   SaveAll = "data-cc-save-all",
   Reject = "data-cc-reject",
   Params = "data-cc-params",
-}
-
-export enum UIEvent {
-  Save = "cc:save",
-  AcceptAll = "cc:acceptAll",
-  Reject = "cc:reject",
-  Change = "cc:change",
-  OpenParams = "cc:params:open",
-  CloseParams = "cc:params:close",
 }
 
 export interface CookieChangeEventDict {
@@ -62,7 +54,7 @@ export class UI {
   description: HTMLParagraphElement;
   versionInfo: HTMLParagraphElement;
 
-  constructor(private _messages: ConsentMessages) {
+  constructor(private _messages: ConsentMessages, private dispatcher: EventDispatcher) {
     this.card = createHTMLElement<HTMLDivElement>("div", {
       class: "cc_card",
       "aria-hidden": "true",
@@ -222,13 +214,14 @@ export class UI {
     // onChange
     input.addEventListener("change", (e: Event) => {
       e.preventDefault();
-      const onInputChange: CustomEvent = new CustomEvent<CookieChangeEventDict>(UIEvent.Change, {
+      this.dispatcher.dispatch<{"input": HTMLInputElement, "cookie": Cookie }>(ConsentEvent.Change, {input, cookie});
+      /*const onInputChange: CustomEvent = new CustomEvent<CookieChangeEventDict>(ConsentEvent.Change, {
         detail: {
           input,
           cookie,
         },
       });
-      this.card.dispatchEvent(onInputChange);
+      this.card.dispatchEvent(onInputChange);*/
     });
 
     return {
@@ -349,7 +342,7 @@ export class UI {
             firstCookieInput.focus();
           }
         }
-        this.card.dispatchEvent(createCustomEvent(UIEvent.OpenParams, { details: {} }));
+        this.card.dispatchEvent(createCustomEvent(ConsentEvent.OpenParams, { details: {} }));
       } else {
         this.btnParams.innerHTML = this._messages.open_preferences;
         // Switch to Open params text
@@ -360,27 +353,27 @@ export class UI {
         UI.hideElement(this.btnSave);
         // hide the cc_body
         UI.hideElement(this.body);
-        this.card.dispatchEvent(createCustomEvent(UIEvent.CloseParams, { details: {} }));
+        this.card.dispatchEvent(createCustomEvent(ConsentEvent.CloseParams, { details: {} }));
       }
     });
   }
 
   private addAcceptAllEvent() {
     this.btnAcceptAll.addEventListener("click", () => {
-      this.card.dispatchEvent(createCustomEvent(UIEvent.AcceptAll, { details: {} }));
+      this.dispatcher.dispatch(ConsentEvent.AcceptAll);
     });
   }
 
   private addSaveEvent() {
     this.btnSave.addEventListener("click", () => {
-      this.card.dispatchEvent(createCustomEvent(UIEvent.Save, { details: {} }));
+      this.dispatcher.dispatch(ConsentEvent.Save);
     });
   }
 
   private addRejectEvent() {
     [this.btnReject, this.btnContinueWithoutAccepting].forEach((btn) => {
       btn.addEventListener("click", () => {
-        this.card.dispatchEvent(createCustomEvent(UIEvent.Reject, { details: {} }));
+        this.dispatcher.dispatch(ConsentEvent.Reject);
       });
     });
   }

@@ -2,7 +2,8 @@ import './style.css';
 import {CookieConsent} from "../lib/CookieConsent.ts";
 import {Category} from "../lib/Category.ts";
 import {ConsentMessages} from "../lib/Translations.ts";
-import { UIEvent } from "../lib/UI.ts";
+import "../lib/EventDispatcher.ts";
+import { ConsentEvent } from "../lib/EventDispatcher.ts";
 
 
 const mandatoryCategory: Category = new Category('Mandatory', 'These cookies are mandatory to use this website...');
@@ -51,23 +52,21 @@ consent.setMessages((messages) => {
   console.log(messages);
 })
 
-consent.card.addEventListener(UIEvent.Change, (e) => {
-  console.log(e);
+consent.on(ConsentEvent.Show, (args: any) => {
+  console.log("test", args);
 })
-consent.card.addEventListener(UIEvent.Save, (e) => {
-  console.log(e);
+
+consent.on(ConsentEvent.Change, () => {
 })
-consent.card.addEventListener(UIEvent.AcceptAll, (e) => {
-  console.log(e);
+consent.on(ConsentEvent.Save, () => {
 })
-consent.card.addEventListener(UIEvent.Reject, (e) => {
-  console.log(e);
+consent.on(ConsentEvent.AcceptAll, () => {
 })
-consent.card.addEventListener(UIEvent.OpenParams, (e) => {
-  console.log(e);
+consent.on(ConsentEvent.Reject, () => {
 })
-consent.card.addEventListener(UIEvent.CloseParams, (e) => {
-  console.log(e);
+consent.on(ConsentEvent.OpenParams, () => {
+})
+consent.on(ConsentEvent.CloseParams, () => {
 })
 
 

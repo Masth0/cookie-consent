@@ -1,9 +1,10 @@
 import { Category } from "./Category.ts";
 import { arrayToMap, getCookieValue, isAttributeValid, strToId } from "./utils.ts";
 import { Cookie } from "./Cookie.ts";
-import { UI, UIEvent } from "./UI.ts";
+import { UI } from "./UI.ts";
 import { CategoryTranslation, ConsentMessages } from "./Translations.ts";
 import FocusTrap from "./FocusTrap.ts";
+import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 
 export interface ConsentConfig {
   version: number;
@@ -90,12 +91,13 @@ export class CookieConsent {
   private needToReload: Boolean;
   private readonly UI: UI;
   private _categories: Map<string, Category>;
+  private dispatcher: EventDispatcher = new EventDispatcher();
 
   constructor(config: ConsentConfig) {
     this.config = config;
     this.needToReload = config.forceToReload;
     this._categories = arrayToMap<Category>(this.config.categories, "name");
-    this.UI = new UI(this.createMessagesObj()); //TODO provide pre-filled messages for many locales like fr, de, en
+    this.UI = new UI(this.createMessagesObj(), this.dispatcher); //TODO provide pre-filled messages for many locales like fr, de, en
     this.#focusTrap = new FocusTrap(this.UI.card);
     this.setup();
     // this.show();
@@ -192,7 +194,7 @@ export class CookieConsent {
     }
 
     // Events
-    this.UI.card.addEventListener(UIEvent.Change, (e: any) => {
+    this.UI.card.addEventListener(ConsentEvent.Change, (e: any) => {
       const cookieChanged: Cookie = e.detail.cookie;
       const category: Category | undefined = this._categories.get(cookieChanged.categoryName);
 
@@ -205,18 +207,18 @@ export class CookieConsent {
       }
     });
 
-    this.UI.card.addEventListener(UIEvent.Save, async () => {
-      await this.update(UIEvent.Save);
+    this.UI.card.addEventListener(ConsentEvent.Save, async () => {
+      await this.update(ConsentEvent.Save);
       this.hide();
     });
 
-    this.UI.card.addEventListener(UIEvent.AcceptAll, async () => {
-      await this.update(UIEvent.AcceptAll);
+    this.UI.card.addEventListener(ConsentEvent.AcceptAll, async () => {
+      await this.update(ConsentEvent.AcceptAll);
       this.hide();
     });
 
-    this.UI.card.addEventListener(UIEvent.Reject, async () => {
-      await this.update(UIEvent.Reject);
+    this.UI.card.addEventListener(ConsentEvent.Reject, async () => {
+      await this.update(ConsentEvent.Reject);
       this.hide();
     });
 
@@ -233,6 +235,7 @@ export class CookieConsent {
     this.UI.card.setAttribute("aria-hidden", "false");
     this.UI.card.setAttribute("tabindex", "0");
     this.#focusTrap.listen();
+    this.dispatcher.dispatch<{"consent": CookieConsent}>(ConsentEvent.Show, { consent: this });
   }
 
   hide() {
@@ -243,16 +246,24 @@ export class CookieConsent {
     this.#focusTrap.dispose();
   }
 
-  private async update(eventName: UIEvent): Promise<void> {
+  on(eventName: ConsentEvent, callback: Function) {
+    this.dispatcher.addListener(eventName, callback);
+  }
+
+  off(eventName: ConsentEvent, callback: Function) {
+    this.dispatcher.removeListener(eventName, callback);
+  }
+
+  private async update(eventName: ConsentEvent): Promise<void> {
     switch (eventName) {
-      case UIEvent.Save:
+      case ConsentEvent.Save:
         await this.enableSelected();
         break;
-      case UIEvent.AcceptAll:
+      case ConsentEvent.AcceptAll:
         await this.enableAll(true);
         this.UI.update(this._categories);
         break;
-      case UIEvent.Reject:
+      case ConsentEvent.Reject:
         await this.enableAll(false).then(() => {
           this.UI.update(this._categories);
         });
