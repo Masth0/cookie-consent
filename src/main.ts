@@ -3,7 +3,6 @@ import {CookieConsent} from "../lib/CookieConsent.ts";
 import {Category} from "../lib/Category.ts";
 import {ConsentMessages} from "../lib/Translations.ts";
 import "../lib/EventDispatcher.ts";
-import { ConsentEvent } from "../lib/EventDispatcher.ts";
 
 
 const mandatoryCategory: Category = new Category('Mandatory', 'These cookies are mandatory to use this website...');
@@ -52,23 +51,12 @@ consent.setMessages((messages) => {
   console.log(messages);
 })
 
-consent.on(ConsentEvent.Show, (args: any) => {
-  console.log("test", args);
-})
-
-consent.on(ConsentEvent.Change, () => {
-})
-consent.on(ConsentEvent.Save, () => {
-})
-consent.on(ConsentEvent.AcceptAll, () => {
-})
-consent.on(ConsentEvent.Reject, () => {
-})
-consent.on(ConsentEvent.OpenParams, () => {
-})
-consent.on(ConsentEvent.CloseParams, () => {
-})
-
+consent.onChange((consent, input, cookie, cookieConsent) => {
+  console.log(consent);
+  console.log(input);
+  console.log(cookie);
+  console.log(cookieConsent);
+});
 
 document.querySelector("[data-cc-open]")?.addEventListener('click', () => {
   consent.show();

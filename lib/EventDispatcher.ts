@@ -15,7 +15,17 @@ export default class EventDispatcher {
     return this.#listeners;
   }
 
+  static #instance: EventDispatcher | undefined;
   #listeners: { [key in string | ConsentEvent]: Function[] } = {};
+
+  private constructor() {}
+
+  static getInstance(): EventDispatcher {
+    if(!EventDispatcher.#instance) {
+      EventDispatcher.#instance = new EventDispatcher();
+    }
+    return EventDispatcher.#instance;
+  }
 
   addListener(eventName: ConsentEvent, callback: Function) {
     if (!this.#listeners[eventName]) {
@@ -33,10 +43,10 @@ export default class EventDispatcher {
     }
   }
 
-  dispatch<T>(eventName: ConsentEvent, eventData?: T) {
+  dispatch<T extends any[]>(eventName: ConsentEvent, ...eventData: T) {
     if (this.#listeners[eventName]) {
       for (const callback of this.#listeners[eventName]) {
-        callback.apply(null, [eventData]);
+        callback.call(null, ...eventData);
       }
     }
   }

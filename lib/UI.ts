@@ -54,7 +54,9 @@ export class UI {
   description: HTMLParagraphElement;
   versionInfo: HTMLParagraphElement;
 
-  constructor(private _messages: ConsentMessages, private dispatcher: EventDispatcher) {
+  private dispatcher: EventDispatcher = EventDispatcher.getInstance();
+
+  constructor(private _messages: ConsentMessages) {
     this.card = createHTMLElement<HTMLDivElement>("div", {
       class: "cc_card",
       "aria-hidden": "true",
@@ -214,7 +216,7 @@ export class UI {
     // onChange
     input.addEventListener("change", (e: Event) => {
       e.preventDefault();
-      this.dispatcher.dispatch<{"input": HTMLInputElement, "cookie": Cookie }>(ConsentEvent.Change, {input, cookie});
+      this.dispatcher.dispatch(ConsentEvent.Change, input, cookie);
       /*const onInputChange: CustomEvent = new CustomEvent<CookieChangeEventDict>(ConsentEvent.Change, {
         detail: {
           input,

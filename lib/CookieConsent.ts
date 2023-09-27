@@ -91,13 +91,13 @@ export class CookieConsent {
   private needToReload: Boolean;
   private readonly UI: UI;
   private _categories: Map<string, Category>;
-  private dispatcher: EventDispatcher = new EventDispatcher();
+  private dispatcher: EventDispatcher = EventDispatcher.getInstance();
 
   constructor(config: ConsentConfig) {
     this.config = config;
     this.needToReload = config.forceToReload;
     this._categories = arrayToMap<Category>(this.config.categories, "name");
-    this.UI = new UI(this.createMessagesObj(), this.dispatcher); //TODO provide pre-filled messages for many locales like fr, de, en
+    this.UI = new UI(this.createMessagesObj()); //TODO provide pre-filled messages for many locales like fr, de, en
     this.#focusTrap = new FocusTrap(this.UI.card);
     this.setup();
     // this.show();
@@ -235,7 +235,7 @@ export class CookieConsent {
     this.UI.card.setAttribute("aria-hidden", "false");
     this.UI.card.setAttribute("tabindex", "0");
     this.#focusTrap.listen();
-    this.dispatcher.dispatch<{"consent": CookieConsent}>(ConsentEvent.Show, { consent: this });
+    this.dispatcher.dispatch(ConsentEvent.Show);
   }
 
   hide() {
@@ -246,12 +246,42 @@ export class CookieConsent {
     this.#focusTrap.dispose();
   }
 
-  on(eventName: ConsentEvent, callback: Function) {
-    this.dispatcher.addListener(eventName, callback);
+  onShow(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.Show, () => callback.call(null, this.card, this));
   }
 
-  off(eventName: ConsentEvent, callback: Function) {
-    this.dispatcher.removeListener(eventName, callback);
+  onHide(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.Hide, () => callback.call(null, this.card, this));
+  }
+
+  onSave(callback: (consent: DeserializedConsent, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.Save, () => callback.call(null, this.deserializeConsent(), this));
+  }
+
+  onAcceptAll(callback: (consent: DeserializedConsent, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.AcceptAll, () => callback.call(null, this.deserializeConsent(), this));
+  }
+
+  onReject(callback: (consent: DeserializedConsent, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.Reject, () => callback.call(null, this.deserializeConsent(), this));
+  }
+
+  onChange(callback: (consent: DeserializedConsent, input: HTMLInputElement, cookie: Cookie, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.Change, (...args: [HTMLInputElement, Cookie]) => {
+      callback.call(null, this.deserializeConsent(), ...args, this);
+    });
+  }
+
+  onOpenParams(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.OpenParams, () => {
+      callback.call(null, this.card, this);
+    });
+  }
+
+  onCloseParams(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
+    this.dispatcher.addListener(ConsentEvent.CloseParams, () => {
+      callback.call(null, this.card, this);
+    });
   }
 
   private async update(eventName: ConsentEvent): Promise<void> {
