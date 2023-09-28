@@ -1,7 +1,7 @@
 import { Category } from "./Category.ts";
 import { Cookie } from "./Cookie.ts";
 import { ConsentMessages } from "./Translations.ts";
-import { createCustomEvent, strToId } from "./utils.ts";
+import { strToId } from "./utils.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 
 const FADE_IN_ANIMATION_TOKEN: string = "cc-open-animation";
@@ -170,7 +170,7 @@ export class UI {
     this.description.innerHTML = messages.description;
     this.btnContinueWithoutAccepting.innerHTML = messages.continue_without_accepting;
     this.btnSave.innerHTML = messages.save;
-    this.btnAcceptAll.innerHTML = messages.save_all;
+    this.btnAcceptAll.innerHTML = messages.accept_all;
     this.btnReject.innerHTML = messages.reject;
     this.btnParams.innerHTML = messages.open_preferences;
   }
@@ -217,13 +217,6 @@ export class UI {
     input.addEventListener("change", (e: Event) => {
       e.preventDefault();
       this.dispatcher.dispatch(ConsentEvent.Change, input, cookie);
-      /*const onInputChange: CustomEvent = new CustomEvent<CookieChangeEventDict>(ConsentEvent.Change, {
-        detail: {
-          input,
-          cookie,
-        },
-      });
-      this.card.dispatchEvent(onInputChange);*/
     });
 
     return {
@@ -344,7 +337,7 @@ export class UI {
             firstCookieInput.focus();
           }
         }
-        this.card.dispatchEvent(createCustomEvent(ConsentEvent.OpenParams, { details: {} }));
+        this.dispatcher.dispatch(ConsentEvent.OpenParams);
       } else {
         this.btnParams.innerHTML = this._messages.open_preferences;
         // Switch to Open params text
@@ -355,7 +348,7 @@ export class UI {
         UI.hideElement(this.btnSave);
         // hide the cc_body
         UI.hideElement(this.body);
-        this.card.dispatchEvent(createCustomEvent(ConsentEvent.CloseParams, { details: {} }));
+        this.dispatcher.dispatch(ConsentEvent.CloseParams);
       }
     });
   }
