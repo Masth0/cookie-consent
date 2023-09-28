@@ -1,8 +1,8 @@
 import './style.css';
 import {CookieConsent} from "../lib/CookieConsent.ts";
 import {Category} from "../lib/Category.ts";
-import {ConsentMessages} from "../lib/Translations.ts";
 import "../lib/EventDispatcher.ts";
+import { En, Fr, LanguageCode } from "../lib/Translations.ts";
 
 
 const mandatoryCategory: Category = new Category('Mandatory', 'These cookies are mandatory to use this website...');
@@ -12,43 +12,48 @@ mandatoryCategory.addCookie({
   domain: "",
   revocable: false,
   scripts: [],
-  tokens: ["PHPSESSID"]
+  tokens: ["PHPSESSID"],
+  translations: {
+    [LanguageCode.Fr]: {
+      name: 'Sessions ID',
+      description: 'lorem ipsum'
+    }
+  }
 });
 
 const marketingCategory: Category = new Category('Marketing', 'Analysing traffic.')
-    marketingCategory.addCookie({
-        description: 'description...',
-        name: "Google Tag Manager",
-        revocable: false,
-        scripts: [],
-        tokens: ['a', 'b', 'c']
+  .addCookie({
+    description: 'description...',
+    name: "Google Tag Manager",
+    revocable: false,
+    scripts: [],
+    tokens: ['a', 'b', 'c']
 });
 
 const consent = new CookieConsent({
   version: 1,
   forceToReload: false, // Force to reload after one of those events SaveAll, Save and Reject.
   categories: [mandatoryCategory, marketingCategory],
-  messages(msg: ConsentMessages) {
-    try {
-      msg.title = 'We use cookies';
-      msg.description = 'We use cookies to enhance your browsing experience, deliver ads or personalized content, and analyze our traffic. By clicking the "Accept All" button, you give your consent to our use of cookies.';
-      msg.continue_without_accepting = 'Continue without accept';
-      msg.save = 'Save';
-      msg.save_all = 'Accept all';
-      msg.reject = 'Reject all';
-      msg.open_preferences = 'Customize';
-      msg.close_preferences = 'Close preferences';
-    } catch (e: any) {
-      if (e instanceof Error) {
-        console.error(e.message);
-      }
+  messages(msg) {
+    let messages = msg;
+    switch (document.documentElement.getAttribute('lang')) {
+      case LanguageCode.Fr:
+        messages = {...messages, ...Fr};
+        console.log(messages);
+        for (const categoriesKey in messages.categories) {
+          console.log(messages.categories[categoriesKey]);
+        }
+        break;
+      case LanguageCode.En:
+        messages = En;
+        break;
     }
-    return msg;
+    return messages;
   }
 });
 
-consent.setMessages((messages) => {
-  console.log(messages);
+consent.setMessages(() => {
+  // console.log(messages);
 })
 
 consent.onChange((consent, input, cookie, cookieConsent) => {
@@ -58,6 +63,19 @@ consent.onChange((consent, input, cookie, cookieConsent) => {
   console.log(cookieConsent);
 });
 
+consent.onReject((consent, cookieConsent) => {
+  console.log(consent);
+  console.log(cookieConsent);
+});
+
 document.querySelector("[data-cc-open]")?.addEventListener('click', () => {
   consent.show();
 })
+
+const localeBtns = document.querySelectorAll(".js-btn-locale");
+
+for (const localeBtn of localeBtns) {
+  localeBtn.addEventListener("click", () => {
+    document.documentElement.setAttribute("lang", localeBtn.innerHTML);
+  })
+}

@@ -125,30 +125,33 @@ export class CookieConsent {
       open_preferences: "",
       reject: "",
       save: "",
-      save_all: "",
+      accept_all: "",
       title: "",
     };
 
-    for (const [categoryName, category] of this._categories) {
-      const categoryNameToken: string = strToId(categoryName);
-      consentMessages.categories[categoryNameToken] = {
-        name: categoryName,
-        description: category.description,
-        cookies: {},
-      } as CategoryTranslation;
+    if (consentMessages.categories) {
+      for (const [categoryName, category] of this._categories) {
+        const categoryNameToken: string = strToId(categoryName);
+        consentMessages.categories[categoryNameToken] = {
+          name: categoryName,
+          description: category.description,
+          cookies: {},
+        } as CategoryTranslation;
 
-      for (const [cookieName, cookie] of category.cookies) {
-        const cookieNameToken: string = strToId(categoryName);
+        for (const [cookieName, cookie] of category.cookies) {
+          const cookieNameToken: string = strToId(categoryName);
 
-        consentMessages.categories[categoryNameToken].cookies![cookieNameToken] = {
-          name: cookieName,
-          description: cookie.description,
-        };
-        Object.preventExtensions(consentMessages.categories[categoryNameToken].cookies![cookieNameToken]);
+          consentMessages.categories[categoryNameToken].cookies![cookieNameToken] = {
+            name: cookieName,
+            description: cookie.description,
+          };
+          Object.preventExtensions(consentMessages.categories[categoryNameToken].cookies![cookieNameToken]);
+        }
+
+        Object.preventExtensions(consentMessages.categories[categoryNameToken]);
       }
-
-      Object.preventExtensions(consentMessages.categories[categoryNameToken]);
     }
+
 
     Object.preventExtensions(consentMessages);
     Object.preventExtensions(consentMessages.categories);
@@ -207,17 +210,17 @@ export class CookieConsent {
       }
     });
 
-    this.UI.card.addEventListener(ConsentEvent.Save, async () => {
+    this.dispatcher.addListener(ConsentEvent.Save, async () => {
       await this.update(ConsentEvent.Save);
       this.hide();
     });
 
-    this.UI.card.addEventListener(ConsentEvent.AcceptAll, async () => {
+    this.dispatcher.addListener(ConsentEvent.AcceptAll, async () => {
       await this.update(ConsentEvent.AcceptAll);
       this.hide();
     });
 
-    this.UI.card.addEventListener(ConsentEvent.Reject, async () => {
+    this.dispatcher.addListener(ConsentEvent.Reject, async () => {
       await this.update(ConsentEvent.Reject);
       this.hide();
     });
@@ -316,6 +319,7 @@ export class CookieConsent {
       return;
     }
 
+    // Show the consent card if versions don't match
     if (consentSaved.version !== this.version) {
       this.enableAll(false).then(() => {
         this.show();
@@ -332,10 +336,8 @@ export class CookieConsent {
   }
 
   /**
-   * Call on UIEvent.AcceptAll
+   * Call on ConsentEvent.AcceptAll
    * Set all cookies accepted at true
-   * @param value
-   * @private
    */
   private enableAll(value: boolean): Promise<void[]> {
     let cookiePromises: Promise<void>[] = [];

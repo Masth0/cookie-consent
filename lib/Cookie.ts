@@ -1,4 +1,5 @@
 import { getAllCookies } from "./utils.ts";
+import { LanguageCode } from "./Translations.ts";
 
 export interface CookieConfig {
   name: string;
@@ -7,6 +8,7 @@ export interface CookieConfig {
   domain?: string; // Needed to remove his cookies by tokens
   tokens: string[];
   scripts?: HTMLScriptElement[];
+  translations?: {[key in LanguageCode]?: Pick<Cookie, "name" | "description">}
 }
 
 export class Cookie {

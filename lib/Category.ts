@@ -1,4 +1,5 @@
 import { Cookie, CookieConfig } from "./Cookie.ts";
+import { LanguageCode } from "./Translations.ts";
 
 export class Category {
   get cookies(): Map<string, Cookie> {
@@ -7,11 +8,14 @@ export class Category {
 
   name: string;
   description: string;
+  translations: {[key in LanguageCode]?: Pick<Category, "name" | "description">};
   #cookies: Map<string, Cookie> = new Map();
 
-  constructor(name: string, description?: string) {
+  constructor(name: string, description?: string, translations?: {[key in LanguageCode]?: Pick<Category, "name" | "description">}) {
     this.name = name;
     this.description = description || "";
+    this.translations = translations || {};
+    return this;
   }
 
   addCookie(cookieConfig: CookieConfig): Category {
