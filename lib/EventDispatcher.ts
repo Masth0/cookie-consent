@@ -1,4 +1,3 @@
-
 export enum ConsentEvent {
   Show = "cc:show",
   Hide = "cc:hide",
@@ -21,7 +20,7 @@ export default class EventDispatcher {
   private constructor() {}
 
   static getInstance(): EventDispatcher {
-    if(!EventDispatcher.#instance) {
+    if (!EventDispatcher.#instance) {
       EventDispatcher.#instance = new EventDispatcher();
     }
     return EventDispatcher.#instance;
@@ -50,5 +49,4 @@ export default class EventDispatcher {
       }
     }
   }
-
 }

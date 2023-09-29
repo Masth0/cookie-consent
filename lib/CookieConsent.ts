@@ -152,7 +152,6 @@ export class CookieConsent {
       }
     }
 
-
     Object.preventExtensions(consentMessages);
     Object.preventExtensions(consentMessages.categories);
     return consentMessages;

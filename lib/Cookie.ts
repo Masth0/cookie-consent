@@ -8,7 +8,7 @@ export interface CookieConfig {
   domain?: string; // Needed to remove his cookies by tokens
   tokens: string[];
   scripts?: HTMLScriptElement[];
-  translations?: {[key in LanguageCode]?: Pick<Cookie, "name" | "description">}
+  translations?: { [key in LanguageCode]?: Pick<Cookie, "name" | "description"> };
 }
 
 export class Cookie {

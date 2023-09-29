@@ -9,6 +9,7 @@
     /* Declarations */
     "declarationDir": "./types",
     "declaration": true,
+    "declarationMap": true,
 
     /* Bundler mode */
     "moduleResolution": "Classic",

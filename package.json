@@ -12,20 +12,24 @@
   "module": "",
   "scripts": {
     "prettier": "prettier \"./lib/*.ts\" --write",
+    "types": "tsc ./lib/*.ts --declaration --emitDeclarationOnly --allowImportingTsExtensions --outDir types",
     "dev": "vite",
     "preview": "vite preview",
     "build:es6": "tsc && vite build",
-    "build:es5": "tsc && vite build --mode es5",
-    "build": "rm -rf ./dist/* && npm run build:es5 && npm run build:es6 && cp ./src/style.css dist/style.css"
+    "build:es5": "npx babel dist/cookie-consent.es.js --out-file dist/cookie-consent.es5.js && terser dist/cookie-consent.es5.js --compress --mangle -o dist/cookie-consent.es5.min.js",
+    "build": "rm -rf ./dist/* && npm run prettier && npm run build:es6 && npm run build:es5 && cp ./src/style.css dist/style.css"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.5",
     "@babel/core": "^7.21.8",
+    "@babel/plugin-transform-runtime": "^7.22.15",
     "@babel/preset-env": "^7.21.5",
     "@rollup/plugin-babel": "^6.0.3",
     "prettier": "3.0.2",
+    "terser": "^5.20.0",
     "typescript": "^5.0.2",
-    "vite": "^4.4.9"
+    "vite": "^4.4.9",
+    "vite-plugin-dts": "^3.6.0"
   },
   "dependencies": {
     "core-js": "^3.30.2",
