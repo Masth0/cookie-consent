@@ -73,6 +73,7 @@ export function createCategoriesFromScriptTags(selector: string): Map<string, Ca
 }
 
 export class CookieConsent {
+
   get categories(): Map<string, Category> {
     return this._categories;
   }
@@ -82,9 +83,10 @@ export class CookieConsent {
   }
 
   get version(): number {
-    return this.config.version;
+    return this.#version;
   }
 
+  #version: number;
   #focusTrap: FocusTrap;
   #cookieToken: string = "_cookie_consent";
   private config: ConsentConfig;
@@ -95,12 +97,15 @@ export class CookieConsent {
 
   constructor(config: ConsentConfig) {
     this.config = config;
-    this.needToReload = config.forceToReload;
-    this._categories = arrayToMap<Category>(this.config.categories, "name");
+    this.#version = this.config.version || 1;
+    this.needToReload = this.config.forceToReload || false;
+    this._categories = this.config.categories ? arrayToMap<Category>(this.config.categories, "name") : new Map();
     this.UI = new UI(this.createMessagesObj()); //TODO provide pre-filled messages for many locales like fr, de, en
     this.#focusTrap = new FocusTrap(this.UI.card);
-    this.setup();
-    // this.show();
+
+    if (this.categories.size > 0) {
+      this.setup();
+    }
 
     return this;
   }
