@@ -1,8 +1,7 @@
-import './style.css';
-import {CookieConsent} from "../lib/CookieConsent.ts";
-import {Category} from "../lib/Category.ts";
+import "./style.css";
 import "../lib/EventDispatcher.ts";
-import { En, Fr, LanguageCode } from "../lib/Translations.ts";
+import { LanguageCode, messages } from "../lib/Translations.ts";
+import { Category, CookieConsent } from "../lib/index.ts";
 
 
 const mandatoryCategory: Category = new Category('Mandatory', 'These cookies are mandatory to use this website...');
@@ -31,30 +30,15 @@ const marketingCategory: Category = new Category('Marketing', 'Analysing traffic
 });
 
 const consent = new CookieConsent({
+  locale: LanguageCode.Fr,
   version: 1,
   forceToReload: false, // Force to reload after one of those events SaveAll, Save and Reject.
   categories: [mandatoryCategory, marketingCategory],
-  messages(msg) {
-    let messages = msg;
-    switch (document.documentElement.getAttribute('lang')) {
-      case LanguageCode.Fr:
-        messages = {...messages, ...Fr};
-        console.log(messages);
-        for (const categoriesKey in messages.categories) {
-          console.log(messages.categories[categoriesKey]);
-        }
-        break;
-      case LanguageCode.En:
-        messages = En;
-        break;
-    }
-    return messages;
+  translations: {
+    [LanguageCode.Fr]: messages.fr,
+    [LanguageCode.En]: messages.en,
   }
 });
-
-consent.setMessages(() => {
-  // console.log(messages);
-})
 
 consent.onChange((consent, input, cookie, cookieConsent) => {
   console.log(consent);

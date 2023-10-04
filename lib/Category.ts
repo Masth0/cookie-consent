@@ -1,5 +1,5 @@
 import { Cookie, CookieConfig } from "./Cookie.ts";
-import { LanguageCode } from "./Translations.ts";
+import { LanguageCode } from "./translations/translations.ts";
 
 export class Category {
   get cookies(): Map<string, Cookie> {

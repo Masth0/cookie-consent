@@ -32,12 +32,12 @@ export interface CookieChangeEventDict {
 
 export class UI {
   get messages(): ConsentMessages {
-    return this._messages;
+    return this.#messages;
   }
 
   set messages(value: ConsentMessages) {
-    this._messages = value;
-    this.updateMessages(this._messages);
+    this.#messages = value;
+    this.updateMessages(this.messages);
   }
 
   card: HTMLDivElement;
@@ -54,9 +54,12 @@ export class UI {
   description: HTMLParagraphElement;
   versionInfo: HTMLParagraphElement;
 
+  #messages: ConsentMessages;
   private dispatcher: EventDispatcher = EventDispatcher.getInstance();
 
-  constructor(private _messages: ConsentMessages) {
+
+  constructor(msg: ConsentMessages) {
+    this.#messages = msg;
     this.card = createHTMLElement<HTMLDivElement>("div", {
       class: "cc_card",
       "aria-hidden": "true",
@@ -132,7 +135,7 @@ export class UI {
   }
 
   async render(categories: Map<string, Category>): Promise<HTMLDivElement | never> {
-    if (!this._messages) {
+    if (!this.#messages) {
       return Promise.reject("Consent messages are not set, render cancelled.");
     }
 
@@ -318,8 +321,8 @@ export class UI {
     this.btnParams.addEventListener("click", () => {
       if (this.body.hasAttribute("hidden")) {
         // Switch to Close params text
-        if (this._messages !== undefined) {
-          this.btnParams.innerHTML = this._messages.close_preferences;
+        if (this.#messages !== undefined) {
+          this.btnParams.innerHTML = this.#messages.close_preferences;
         }
         // Hide SaveAll button
         UI.hideElement(this.btnAcceptAll);
@@ -339,7 +342,7 @@ export class UI {
         }
         this.dispatcher.dispatch(ConsentEvent.OpenParams);
       } else {
-        this.btnParams.innerHTML = this._messages.open_preferences;
+        this.btnParams.innerHTML = this.#messages.open_preferences;
         // Switch to Open params text
         UI.showElement(this.btnAcceptAll);
         // Show SaveAll button

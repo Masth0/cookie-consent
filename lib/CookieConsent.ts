@@ -1,18 +1,20 @@
 import { Category } from "./Category.ts";
-import { arrayToMap, getCookieValue, isAttributeValid, strToId } from "./utils.ts";
+import { arrayToMap, getCookieValue, isAttributeValid } from "./utils.ts";
 import { Cookie } from "./Cookie.ts";
 import { UI } from "./UI.ts";
-import { CategoryTranslation, ConsentMessages } from "./Translations.ts";
+import { ConsentMessages, LanguageCode, messages } from "./Translations.ts";
 import FocusTrap from "./FocusTrap.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 
 export interface ConsentConfig {
+  locale: LanguageCode,
   version: number;
   forceToReload: boolean; // Force to reload on any changes when the user save his consent.
   categories: Category[];
+  messages?: (messages: ConsentMessages) => ConsentMessages;
+  translations: { [key in LanguageCode]?: ConsentMessages };
   onSave?: (config: ConsentConfig) => void;
   onReject?: (config: ConsentConfig) => void;
-  messages?: (messages: ConsentMessages) => ConsentMessages;
 }
 
 export interface DeserializedConsent {
@@ -73,6 +75,14 @@ export function createCategoriesFromScriptTags(selector: string): Map<string, Ca
 }
 
 export class CookieConsent {
+  public get locale(): LanguageCode {
+    return this.#locale;
+  }
+
+  public set locale(value: LanguageCode) {
+    this.#locale = value;
+    // Todo trigger UI to render?
+  }
 
   get categories(): Map<string, Category> {
     return this._categories;
@@ -87,8 +97,10 @@ export class CookieConsent {
   }
 
   #version: number;
+  #locale: LanguageCode;
   #focusTrap: FocusTrap;
   #cookieToken: string = "_cookie_consent";
+  #translations: {[key in LanguageCode]?: ConsentMessages} = messages;
   private config: ConsentConfig;
   private needToReload: Boolean;
   private readonly UI: UI;
@@ -97,11 +109,16 @@ export class CookieConsent {
 
   constructor(config: ConsentConfig) {
     this.config = config;
+    this.#locale = this.config.locale;
     this.#version = this.config.version || 1;
     this.needToReload = this.config.forceToReload || false;
     this._categories = this.config.categories ? arrayToMap<Category>(this.config.categories, "name") : new Map();
-    this.UI = new UI(this.createMessagesObj()); //TODO provide pre-filled messages for many locales like fr, de, en
+    this.UI = new UI(messages[LanguageCode.Fr] as ConsentMessages);
     this.#focusTrap = new FocusTrap(this.UI.card);
+
+    if (this.#translations[this.#locale]) {
+      this.UI.updateMessages(this.#translations[this.#locale] as ConsentMessages);
+    }
 
     if (this.categories.size > 0) {
       this.setup();
@@ -110,6 +127,10 @@ export class CookieConsent {
     return this;
   }
 
+  /**
+   * @param {(messages: ConsentMessages) => void} cb
+   * @returns {this}
+   */
   setMessages(cb: (messages: ConsentMessages) => void) {
     try {
       cb.call(null, this.UI.messages);
@@ -121,9 +142,9 @@ export class CookieConsent {
     return this;
   }
 
-  createMessagesObj(): ConsentMessages {
+  /*createMessagesObj(): ConsentMessages {
     let consentMessages: ConsentMessages = {
-      categories: {} as { [key: string]: CategoryTranslation },
+      // categories: {} as { [key: string]: CategoryTranslation },
       close_preferences: "",
       continue_without_accepting: "",
       description: "",
@@ -134,7 +155,7 @@ export class CookieConsent {
       title: "",
     };
 
-    if (consentMessages.categories) {
+    /!*if (consentMessages.categories) {
       for (const [categoryName, category] of this._categories) {
         const categoryNameToken: string = strToId(categoryName);
         consentMessages.categories[categoryNameToken] = {
@@ -144,7 +165,7 @@ export class CookieConsent {
         } as CategoryTranslation;
 
         for (const [cookieName, cookie] of category.cookies) {
-          const cookieNameToken: string = strToId(categoryName);
+          const cookieNameToken: string = strToId(cookieName);
 
           consentMessages.categories[categoryNameToken].cookies![cookieNameToken] = {
             name: cookieName,
@@ -155,12 +176,12 @@ export class CookieConsent {
 
         Object.preventExtensions(consentMessages.categories[categoryNameToken]);
       }
-    }
+    }*!/
 
     Object.preventExtensions(consentMessages);
-    Object.preventExtensions(consentMessages.categories);
+    // Object.preventExtensions(consentMessages.categories);
     return consentMessages;
-  }
+  }*/
 
   setup() {
     // Parse script tags and get config from them
@@ -192,7 +213,7 @@ export class CookieConsent {
 
     if (typeof this.config.messages === "function") {
       try {
-        this.UI.messages = this.config.messages.call(null, this.createMessagesObj());
+        this.UI.messages = this.config.messages.call(null, this.#translations[this.locale] as ConsentMessages); // provide an empty consentMessages obj
       } catch (error: any) {
         if (error instanceof Error) {
           console.error(error.message);
