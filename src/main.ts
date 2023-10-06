@@ -1,10 +1,16 @@
 import "./style.css";
 import "../lib/EventDispatcher.ts";
-import { LanguageCode, messages } from "../lib/Translations.ts";
-import { Category, CookieConsent } from "../lib/index.ts";
+import { Category, CookieConsent, Translations } from "../lib/index.ts";
 
 
-const mandatoryCategory: Category = new Category('Mandatory', 'These cookies are mandatory to use this website...');
+const mandatoryCategory: Category = new Category(
+  'Mandatory',
+  'These cookies are mandatory to use this website...',
+  {
+    [Translations.LanguageCode.Fr]: {
+      name: 'Obligatoires',
+      description: 'Description fr'
+    }});
 mandatoryCategory.addCookie({
   name: "PHPSESSID",
   description: "The server uses this cookie to identify the user's session and retrieve the appropriate data for that session. The PHPSESSID cookie is typically set to expire when the user closes their web browser.",
@@ -13,16 +19,16 @@ mandatoryCategory.addCookie({
   scripts: [],
   tokens: ["PHPSESSID"],
   translations: {
-    [LanguageCode.Fr]: {
-      name: 'Sessions ID',
-      description: 'lorem ipsum'
-    }
+    [Translations.LanguageCode.Fr]: {
+      name: 'ID de session',
+      description: 'Description fr'
+    },
   }
 });
 
 const marketingCategory: Category = new Category('Marketing', 'Analysing traffic.')
   .addCookie({
-    description: 'description...',
+    description: 'GTAG description...',
     name: "Google Tag Manager",
     revocable: false,
     scripts: [],
@@ -30,13 +36,13 @@ const marketingCategory: Category = new Category('Marketing', 'Analysing traffic
 });
 
 const consent = new CookieConsent({
-  locale: LanguageCode.Fr,
+  locale: Translations.LanguageCode.En,
   version: 1,
   forceToReload: false, // Force to reload after one of those events SaveAll, Save and Reject.
   categories: [mandatoryCategory, marketingCategory],
   translations: {
-    [LanguageCode.Fr]: messages.fr,
-    [LanguageCode.En]: messages.en,
+    [Translations.LanguageCode.Fr]: Translations.messages.fr,
+    [Translations.LanguageCode.En]: Translations.messages.en,
   }
 });
 
@@ -61,5 +67,6 @@ const localeBtns = document.querySelectorAll(".js-btn-locale");
 for (const localeBtn of localeBtns) {
   localeBtn.addEventListener("click", () => {
     document.documentElement.setAttribute("lang", localeBtn.innerHTML);
+    consent.locale = document.documentElement.getAttribute("lang")?.toLowerCase() || "fr";
   })
 }

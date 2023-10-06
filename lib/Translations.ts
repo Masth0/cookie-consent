@@ -218,10 +218,10 @@ export const emptyMessages: ConsentMessages = {
   open_preferences: "",
   reject: "",
   save: "",
-  title: ""
+  title: "",
 };
 
-export const messages: {[key in LanguageCode]?: ConsentMessages} = {
+export const messages: { [key in LanguageCode | string]?: ConsentMessages } = {
   [LanguageCode.En]: {
     close_preferences: "Close settings",
     continue_without_accepting: "Continue without accepting",
@@ -241,5 +241,5 @@ export const messages: {[key in LanguageCode]?: ConsentMessages} = {
     save: "Enregistrer",
     accept_all: "Tout accepter",
     title: "Consentement aux Cookies",
-  }
-}
+  },
+};

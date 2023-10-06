@@ -8,7 +8,7 @@ export interface CookieConfig {
   domain?: string; // Needed to remove his cookies by tokens
   tokens: string[];
   scripts?: HTMLScriptElement[];
-  translations?: { [key in LanguageCode]?: Pick<Cookie, "name" | "description"> };
+  translations?: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
 }
 
 export class Cookie {
@@ -51,6 +51,10 @@ export class Cookie {
     return this.#config.description;
   }
 
+  set description(value: string) {
+    this.#config.description = value;
+  }
+
   get isAccepted(): boolean {
     return this.#accepted;
   }
@@ -63,13 +67,23 @@ export class Cookie {
     return this.#config;
   }
 
+  set translations(value: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> }) {
+    this.#translations = value;
+  }
+
+  get translations(): { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> } {
+    return this.#translations;
+  }
+
   #enabled: boolean = false;
   #accepted: boolean = false;
+  #translations: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
   readonly #config: CookieConfig;
   private _categoryName: string = ""; // Set by .addCookie in Category
 
   constructor(config: CookieConfig) {
     this.#config = config;
+    this.#translations = this.#config.translations || {};
     if (!this.isRevocable) {
       this.accepted = true;
     }

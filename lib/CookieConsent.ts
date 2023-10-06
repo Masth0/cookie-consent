@@ -7,7 +7,7 @@ import FocusTrap from "./FocusTrap.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 
 export interface ConsentConfig {
-  locale: LanguageCode,
+  locale: LanguageCode | string;
   version: number;
   forceToReload: boolean; // Force to reload on any changes when the user save his consent.
   categories: Category[];
@@ -75,13 +75,15 @@ export function createCategoriesFromScriptTags(selector: string): Map<string, Ca
 }
 
 export class CookieConsent {
-  public get locale(): LanguageCode {
+  public get locale(): LanguageCode | string {
     return this.#locale;
   }
 
-  public set locale(value: LanguageCode) {
-    this.#locale = value;
-    // Todo trigger UI to render?
+  public set locale(value: LanguageCode | string) {
+    if (value !== this.#locale) {
+      this.#locale = value;
+      this.dispatcher.dispatch(ConsentEvent.UiMessages, this.#locale, this.#translations[this.#locale], this.categories);
+    }
   }
 
   get categories(): Map<string, Category> {
@@ -97,10 +99,10 @@ export class CookieConsent {
   }
 
   #version: number;
-  #locale: LanguageCode;
+  #locale: LanguageCode | string;
   #focusTrap: FocusTrap;
   #cookieToken: string = "_cookie_consent";
-  #translations: {[key in LanguageCode]?: ConsentMessages} = messages;
+  #translations: { [key in LanguageCode | string]?: ConsentMessages } = messages;
   private config: ConsentConfig;
   private needToReload: Boolean;
   private readonly UI: UI;
@@ -113,11 +115,12 @@ export class CookieConsent {
     this.#version = this.config.version || 1;
     this.needToReload = this.config.forceToReload || false;
     this._categories = this.config.categories ? arrayToMap<Category>(this.config.categories, "name") : new Map();
-    this.UI = new UI(messages[LanguageCode.Fr] as ConsentMessages);
+    this.UI = new UI(/*this.#locale, messages[LanguageCode.Fr] as ConsentMessages, this.categories*/);
     this.#focusTrap = new FocusTrap(this.UI.card);
 
     if (this.#translations[this.#locale]) {
-      this.UI.updateMessages(this.#translations[this.#locale] as ConsentMessages);
+      this.dispatcher.dispatch(ConsentEvent.UiMessages, this.locale, this.#translations[this.#locale] as ConsentMessages, this.categories);
+      // this.UI.updateMessages();
     }
 
     if (this.categories.size > 0) {
@@ -126,62 +129,6 @@ export class CookieConsent {
 
     return this;
   }
-
-  /**
-   * @param {(messages: ConsentMessages) => void} cb
-   * @returns {this}
-   */
-  setMessages(cb: (messages: ConsentMessages) => void) {
-    try {
-      cb.call(null, this.UI.messages);
-    } catch (error: any) {
-      if (error instanceof Error) {
-        console.error(error.name, error.message);
-      }
-    }
-    return this;
-  }
-
-  /*createMessagesObj(): ConsentMessages {
-    let consentMessages: ConsentMessages = {
-      // categories: {} as { [key: string]: CategoryTranslation },
-      close_preferences: "",
-      continue_without_accepting: "",
-      description: "",
-      open_preferences: "",
-      reject: "",
-      save: "",
-      accept_all: "",
-      title: "",
-    };
-
-    /!*if (consentMessages.categories) {
-      for (const [categoryName, category] of this._categories) {
-        const categoryNameToken: string = strToId(categoryName);
-        consentMessages.categories[categoryNameToken] = {
-          name: categoryName,
-          description: category.description,
-          cookies: {},
-        } as CategoryTranslation;
-
-        for (const [cookieName, cookie] of category.cookies) {
-          const cookieNameToken: string = strToId(cookieName);
-
-          consentMessages.categories[categoryNameToken].cookies![cookieNameToken] = {
-            name: cookieName,
-            description: cookie.description,
-          };
-          Object.preventExtensions(consentMessages.categories[categoryNameToken].cookies![cookieNameToken]);
-        }
-
-        Object.preventExtensions(consentMessages.categories[categoryNameToken]);
-      }
-    }*!/
-
-    Object.preventExtensions(consentMessages);
-    // Object.preventExtensions(consentMessages.categories);
-    return consentMessages;
-  }*/
 
   setup() {
     // Parse script tags and get config from them
@@ -192,12 +139,19 @@ export class CookieConsent {
       const existingCategoryFST: Category | undefined = categoriesFromScriptTags.get(categoryName);
       // The category already exists so add or merge...
       if (existingCategoryFST) {
+        existingCategoryFST.translations = { ...existingCategoryFST.translations, ...category.translations };
         // loop cookies
         for (const [cookieName, cookie] of category.cookies) {
           const existingCookie: Cookie | undefined = existingCategoryFST.cookies.get(cookieName);
           if (existingCookie) {
+            existingCookie.translations = { ...existingCategoryFST.translations, ...category.translations };
             existingCookie.addScripts(cookie.scripts);
             existingCookie.addTokens(cookie.tokens);
+            //If the description from the script tag is empty, replace it with the description of the cookie created in JavaScript, provided that
+            // it is not empty either.
+            if (existingCookie.description.length === 0 && cookie.description.length !== 0) {
+              existingCookie.description = cookie.description;
+            }
           } else {
             existingCategoryFST.cookies.set(cookieName, cookie);
           }
@@ -211,7 +165,7 @@ export class CookieConsent {
     this._categories = categoriesFromScriptTags;
     this.updateFromStorage();
 
-    if (typeof this.config.messages === "function") {
+    /*if (typeof this.config.messages === "function") {
       try {
         this.UI.messages = this.config.messages.call(null, this.#translations[this.locale] as ConsentMessages); // provide an empty consentMessages obj
       } catch (error: any) {
@@ -219,10 +173,10 @@ export class CookieConsent {
           console.error(error.message);
         }
       }
-    }
+    }*/
 
     // Events
-    this.UI.card.addEventListener(ConsentEvent.Change, (e: any) => {
+    /*this.UI.card.addEventListener(ConsentEvent.Change, (e: any) => {
       const cookieChanged: Cookie = e.detail.cookie;
       const category: Category | undefined = this._categories.get(cookieChanged.categoryName);
 
@@ -233,7 +187,7 @@ export class CookieConsent {
           cookie.accepted = e.detail.input.checked;
         }
       }
-    });
+    });*/
 
     this.dispatcher.addListener(ConsentEvent.Save, async () => {
       await this.update(ConsentEvent.Save);

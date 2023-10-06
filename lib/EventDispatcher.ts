@@ -7,6 +7,7 @@ export enum ConsentEvent {
   Change = "cc:change",
   OpenParams = "cc:params:open",
   CloseParams = "cc:params:close",
+  UiMessages = "cc:ui:messages", // Update messages in UI
 }
 
 export default class EventDispatcher {
