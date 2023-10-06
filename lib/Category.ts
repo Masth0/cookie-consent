@@ -19,14 +19,23 @@ export class Category {
   }
 
   addCookie(cookieConfig: CookieConfig): Category {
-    const cookie = this.#cookies.get(cookieConfig.name);
+    const cookie = this.getCookie(cookieConfig.name);
+
     if (cookie) {
-      cookie.addScripts(cookie.scripts);
-      cookie.addTokens(cookie.tokens);
+      if (cookieConfig.scripts) {
+        cookie.addScripts(cookieConfig.scripts);
+      }
+      if (cookieConfig.tokens) {
+        cookie.addTokens(cookieConfig.tokens);
+      }
+      if (cookieConfig.translations) {
+        cookie.translations = { ...cookie.translations, ...cookieConfig.translations };
+      }
     } else {
-      const cookie: Cookie = new Cookie(cookieConfig);
-      cookie.categoryName = this.name;
-      this.cookies.set(cookie.name, cookie);
+      // Create new Cookie
+      const newCookie: Cookie = new Cookie(cookieConfig);
+      newCookie.categoryName = this.name;
+      this.cookies.set(newCookie.name, newCookie);
     }
 
     return this;

@@ -6,7 +6,7 @@ export interface CookieConfig {
   description: string;
   revocable: boolean;
   domain?: string; // Needed to remove his cookies by tokens
-  tokens: string[];
+  tokens?: string[];
   scripts?: HTMLScriptElement[];
   translations?: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
 }
@@ -32,7 +32,7 @@ export class Cookie {
   }
 
   get tokens(): string[] {
-    return this.#config.tokens;
+    return this.#config.tokens || [];
   }
 
   get scripts(): HTMLScriptElement[] {
@@ -160,8 +160,8 @@ export class Cookie {
   addTokens(tokens: string[]) {
     for (const token of tokens) {
       const trimmedToken = token.trim();
-      if (trimmedToken.length > 0 && this.#config.tokens.indexOf(trimmedToken) === -1) {
-        this.#config.tokens.push(trimmedToken);
+      if (trimmedToken.length > 0 && this.tokens.indexOf(trimmedToken) === -1) {
+        this.tokens.push(trimmedToken);
       }
     }
   }
