@@ -1,21 +1,4 @@
-import { Cookie } from "./Cookie.ts";
-
-export interface CategoryTranslation {
-  name: string;
-  description: string;
-  cookies?: { [key: string]: Pick<Cookie, "name" | "description"> };
-}
-
-export interface ConsentMessages {
-  title: string;
-  description: string;
-  open_preferences: string;
-  close_preferences: string;
-  reject: string;
-  accept_all: string;
-  save: string;
-  continue_without_accepting: string;
-}
+import { CardMessages } from "./ui/CardElement.ts";
 
 /**
  * LanguageCode
@@ -210,36 +193,27 @@ export enum LanguageCode {
   Zu = "zu",
 }
 
-export const emptyMessages: ConsentMessages = {
-  accept_all: "",
-  close_preferences: "",
-  continue_without_accepting: "",
-  description: "",
-  open_preferences: "",
-  reject: "",
-  save: "",
-  title: "",
-};
-
-export const messages: { [key in LanguageCode | string]?: ConsentMessages } = {
+export const messages: { [key in LanguageCode | string]?: CardMessages } = {
   [LanguageCode.En]: {
-    close_preferences: "Close settings",
-    continue_without_accepting: "Continue without accepting",
+    version: "",
+    closeSettings: "Close settings",
+    continueWithoutAccepting: "Continue without accepting",
     description: `We use cookies to enhance your browsing experience on our website. By continuing to use this site, you consent to the use of cookies in accordance with our <a href='' target="_blank">Privacy Policy</a>.`,
-    open_preferences: "Settings",
+    openSettings: "Settings",
     reject: "Refuse all",
     save: "Save",
-    accept_all: "Accept all",
+    acceptAll: "Accept all",
     title: "Cookie Consent",
   },
   [LanguageCode.Fr]: {
-    close_preferences: "Fermer les préferences",
-    continue_without_accepting: "Continuer sans accepter",
+    version: "Nous avons mis à jours nos cookies.",
+    closeSettings: "Fermer les préferences",
+    continueWithoutAccepting: "Continuer sans accepter",
     description: `Nous utilisons des cookies pour améliorer votre expérience de navigation sur notre site web. En continuant à utiliser ce site, vous consentez à l'utilisation de cookies conformément à notre <a href="" target="_blank">Politique de confidentialité</a>.`,
-    open_preferences: "Préférences",
+    openSettings: "Préférences",
     reject: "Tout refuser",
     save: "Enregistrer",
-    accept_all: "Tout accepter",
+    acceptAll: "Tout accepter",
     title: "Consentement aux Cookies",
   },
 };

@@ -1,6 +1,9 @@
-import { getAllCookies } from "./utils.ts";
 import { LanguageCode } from "./Translations.ts";
+import { getAllCookies } from "./utils.ts";
+import { CookieElement } from "./ui/CookieElement.ts";
+import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 
+type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
 export interface CookieConfig {
   name: string;
   description: string;
@@ -8,51 +11,32 @@ export interface CookieConfig {
   domain?: string; // Needed to remove his cookies by tokens
   tokens?: string[];
   scripts?: HTMLScriptElement[];
-  translations?: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
+  translations?: CookieTranslations;
 }
 
 export class Cookie {
   get categoryName(): string {
-    return this._categoryName;
+    return this.#categoryName;
   }
 
   set categoryName(value: string) {
-    this._categoryName = value;
-  }
-  get isEnabled(): boolean {
-    return this.#enabled;
-  }
-
-  set enabled(value: boolean) {
-    this.#enabled = value;
-  }
-
-  get domain(): string | undefined {
-    return this.#config.domain;
-  }
-
-  get tokens(): string[] {
-    return this.#config.tokens || [];
-  }
-
-  get scripts(): HTMLScriptElement[] {
-    return this.#config.scripts ?? [];
-  }
-
-  get isRevocable(): boolean {
-    return this.#config.revocable;
+    this.#categoryName = value;
   }
 
   get name(): string {
-    return this.#config.name;
+    return this.#name;
   }
 
   get description(): string {
-    return this.#config.description;
+    return this.#description;
   }
 
   set description(value: string) {
-    this.#config.description = value;
+    this.#description = value;
+  }
+
+  get isRevocable(): boolean {
+    return this.#revocable;
   }
 
   get isAccepted(): boolean {
@@ -61,44 +45,64 @@ export class Cookie {
 
   set accepted(value: boolean) {
     this.#accepted = value;
+    this.element.setChecked(value);
   }
 
-  get config(): CookieConfig {
-    return this.#config;
+  get isEnabled(): boolean {
+    return this.#enabled;
   }
 
-  set translations(value: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> }) {
-    this.#translations = value;
+  get domain(): string {
+    return this.#domain;
   }
 
-  get translations(): { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> } {
+  set domain(value: string) {
+    this.#domain = value;
+  }
+
+  get tokens(): string[] {
+    return this.#tokens;
+  }
+
+  get scripts(): HTMLScriptElement[] {
+    return this.#scripts;
+  }
+
+  get translations(): CookieTranslations {
     return this.#translations;
   }
 
-  #enabled: boolean = false;
-  #accepted: boolean = false;
-  #translations: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
-  readonly #config: CookieConfig;
-  private _categoryName: string = ""; // Set by .addCookie in Category
-
-  constructor(config: CookieConfig) {
-    this.#config = config;
-    this.#translations = this.#config.translations || {};
-    if (!this.isRevocable) {
-      this.accepted = true;
-    }
+  get element(): CookieElement {
+    return this.#element;
   }
 
-  private static copyScriptTag(script: HTMLScriptElement): HTMLScriptElement {
-    const copy: HTMLScriptElement = document.createElement("script");
+  #categoryName: string = "";
+  #name: string;
+  #description: string;
+  #revocable: boolean;
+  #accepted: boolean = false;
+  #enabled: boolean = false;
+  #domain: string;
+  #tokens: string[];
+  #scripts: HTMLScriptElement[];
+  #translations: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
+  #element: CookieElement;
+  #dispatcher: EventDispatcher = EventDispatcher.getInstance();
 
-    for (let i = 0; i < script.attributes.length; i++) {
-      const attr = script.attributes[i];
-      copy.setAttribute(attr.name, attr.value);
-      copy.innerHTML = script.innerHTML;
+  constructor(config: CookieConfig) {
+    this.#name = config.name;
+    this.#description = config.description;
+    this.#revocable = config.revocable;
+    this.#domain = config?.domain || "";
+    this.#tokens = config?.tokens || [];
+    this.#scripts = config?.scripts || [];
+    this.#translations = config?.translations || {};
+    // Create html element
+    this.#element = new CookieElement(this.#name);
+    this.#element.updateMessages({ name: this.#name, description: this.#description });
+    if (this.isRevocable) {
+      this.#dispatcher.addListener(ConsentEvent.CookieChange, this.onCookieChange.bind(this));
     }
-
-    return copy;
   }
 
   /**
@@ -106,11 +110,11 @@ export class Cookie {
    */
   enable(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (this.enabled) reject("Cookie " + this.name + " is already enabled");
+      if (this.isEnabled) reject("Cookie " + this.name + " is already enabled");
       let newScriptTags: HTMLScriptElement[] = [];
 
-      if (this.#config.scripts) {
-        this.#config.scripts.forEach((script) => {
+      if (this.#scripts) {
+        this.#scripts.forEach((script) => {
           const copy = this.createScriptTag(script);
           if (copy) {
             script.insertAdjacentElement("beforebegin", copy);
@@ -118,9 +122,9 @@ export class Cookie {
           }
         });
 
-        this.config.scripts = newScriptTags;
+        this.#scripts = newScriptTags;
       }
-      this.enabled = true;
+      this.#enabled = true;
       resolve();
     });
   }
@@ -130,13 +134,13 @@ export class Cookie {
    */
   disable(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.isRevocable && !this.isAccepted) reject("Cookie " + this.name + " isn't revocable.");
+      if (!this.isRevocable) reject("Cookie " + this.name + " isn't revocable.");
       if (this.isRevocable && this.isEnabled) {
         const cookiesFound = this.retrieveCookiesByTokens();
         for (const cookieFound of cookiesFound) {
           const expireDate = new Date("1970");
           let domain: string = location.hostname.replace("www", "");
-          document.cookie = `${cookieFound.name}=; expires=${expireDate.toUTCString()}; Domain=${domain}; Max-Age=0; path=/;`;
+          document.cookie = `${cookieFound.name}=; expires=${expireDate.toUTCString()}; domain=${domain}; max-age=0; path=/;`;
         }
 
         this.#enabled = false;
@@ -157,12 +161,32 @@ export class Cookie {
     }
   }
 
-  addTokens(tokens: string[]) {
+  addTokens(tokens: string[]): string[] {
     for (const token of tokens) {
       const trimmedToken = token.trim();
-      if (trimmedToken.length > 0 && this.tokens.indexOf(trimmedToken) === -1) {
+      if (trimmedToken && this.#tokens.indexOf(trimmedToken) === -1) {
         this.tokens.push(trimmedToken);
       }
+    }
+
+    return this.tokens;
+  }
+
+  /**
+   * Add new translations
+   * @param {CookieTranslations} translations
+   */
+  addTranslations(translations: CookieTranslations) {
+    for (const translationsKey in translations) {
+      if (!this.translations.hasOwnProperty(translationsKey)) {
+        this.translations[translationsKey] = translations[translationsKey];
+      }
+    }
+  }
+
+  private onCookieChange(name: string, checked: boolean) {
+    if (name === this.#name) {
+      this.#accepted = checked;
     }
   }
 
@@ -195,6 +219,18 @@ export class Cookie {
       copy.src = copy.dataset.src;
     } else {
       copy.type = copy.dataset.type || "text/javascript";
+    }
+
+    return copy;
+  }
+
+  private static copyScriptTag(script: HTMLScriptElement): HTMLScriptElement {
+    const copy: HTMLScriptElement = document.createElement("script");
+
+    for (let i = 0; i < script.attributes.length; i++) {
+      const attr = script.attributes[i];
+      copy.setAttribute(attr.name, attr.value);
+      copy.innerHTML = script.innerHTML;
     }
 
     return copy;

@@ -1,153 +1,68 @@
+import { LanguageCode } from "./Translations.ts";
 import { Category } from "./Category.ts";
-import { arrayToMap, getCookieValue, isAttributeValid } from "./utils.ts";
+import { DeserializedConsent, Store } from "./Store.ts";
+import { arrayToMap, isAttributeValid } from "./utils.ts";
 import { Cookie } from "./Cookie.ts";
-import { UI } from "./UI.ts";
-import { ConsentMessages, LanguageCode, messages } from "./Translations.ts";
-import FocusTrap from "./FocusTrap.ts";
+import { CardElement, CardMessages } from "./ui/CardElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
+import { hideElement, showElement } from "./ui/helpers.ts";
 
-export interface ConsentConfig {
+export interface CookieConsentConfig {
   locale: LanguageCode | string;
-  version: number;
-  forceToReload: boolean; // Force to reload on any changes when the user save his consent.
-  categories: Category[];
-  messages?: (messages: ConsentMessages) => ConsentMessages;
-  translations: { [key in LanguageCode]?: ConsentMessages };
-  onSave?: (config: ConsentConfig) => void;
-  onReject?: (config: ConsentConfig) => void;
-}
-
-export interface DeserializedConsent {
-  version: number;
-  cookies: Pick<Cookie, "name" | "categoryName" | "accepted" | "isRevocable">[];
-}
-
-export function createCategoriesFromScriptTags(selector: string): Map<string, Category> {
-  let categories: Map<string, Category> = new Map();
-  const $scripts: HTMLScriptElement[] = Array.from(document.querySelectorAll<HTMLScriptElement>(selector));
-
-  for (const $script of $scripts) {
-    // Category
-    const categoryName: string = $script.getAttribute("data-cc-category-name")?.trim() || "";
-    const categoryDescription: string = $script.getAttribute("data-cc-category-description")?.trim() || "";
-
-    if (!isAttributeValid(categoryName)) {
-      console.error(`Name is missing on: ${$script.outerHTML}`);
-      continue; // Next
-    }
-
-    // Before creating the category, category-name and category-description must not be empty
-    let category: Category =
-      categories.get(categoryName) !== undefined ? categories.get(categoryName)! : new Category(categoryName, categoryDescription);
-
-    // Cookie
-    const cookieName: string = $script.getAttribute("data-cc-name")?.trim() || "";
-    const cookieDescription: string = $script.getAttribute("data-cc-description")?.trim() || "";
-    const cookieDomain: string = $script.getAttribute("data-cc-domain")?.trim() || "";
-    const cookieRevocable: boolean = $script.hasAttribute("data-cc-revocable");
-    const cookieTokensStr: string = $script.getAttribute("data-cc-tokens") || "";
-    let tokens: string[] = [];
-
-    if (isAttributeValid(cookieTokensStr)) {
-      tokens = cookieTokensStr.split(",").map((token) => token.trim());
-    }
-
-    const cookie: Cookie | undefined = category.getCookie(cookieName);
-
-    if (!cookie) {
-      category.addCookie({
-        name: cookieName,
-        description: cookieDescription,
-        domain: cookieDomain,
-        tokens: tokens,
-        scripts: [$script],
-        revocable: cookieRevocable,
-      });
-    } else {
-      cookie.addScripts([$script]);
-      cookie.addTokens(tokens);
-    }
-
-    categories.set(categoryName, category);
-  }
-
-  return categories;
+  version?: string;
+  forceToReload?: boolean; // Force to reload on any changes when the user save his consent.
+  categories?: Category[];
+  translations?: { [key in LanguageCode]?: CardMessages };
+  onSave?: (config: CookieConsentConfig) => void;
+  onReject?: (config: CookieConsentConfig) => void;
 }
 
 export class CookieConsent {
-  public get locale(): LanguageCode | string {
-    return this.#locale;
+  set locale(value: LanguageCode | string) {
+    this.#locale = value.toLowerCase();
+    this.updateMessages();
   }
 
-  public set locale(value: LanguageCode | string) {
-    if (value !== this.#locale) {
-      this.#locale = value;
-      this.dispatcher.dispatch(ConsentEvent.UiMessages, this.#locale, this.#translations[this.#locale], this.categories);
-    }
-  }
-
-  get categories(): Map<string, Category> {
-    return this._categories;
-  }
-
-  get card(): HTMLDivElement {
-    return this.UI.card;
-  }
-
-  get version(): number {
-    return this.#version;
-  }
-
-  #version: number;
+  #cookieKey: string = "_cc_consent";
   #locale: LanguageCode | string;
-  #focusTrap: FocusTrap;
-  #cookieToken: string = "_cookie_consent";
-  #translations: { [key in LanguageCode | string]?: ConsentMessages } = messages;
-  private config: ConsentConfig;
-  private needToReload: Boolean;
-  private readonly UI: UI;
-  private _categories: Map<string, Category>;
-  private dispatcher: EventDispatcher = EventDispatcher.getInstance();
+  #version: string; // "ex: 1.0.0"
+  #forceToReload: boolean;
+  #categories: Map<string, Category>;
+  #translations: { [key in LanguageCode | string]?: CardMessages };
+  #store: Store = new Store(this.#cookieKey);
+  #dispatcher: EventDispatcher = EventDispatcher.getInstance();
+  #card: CardElement = new CardElement();
 
-  constructor(config: ConsentConfig) {
-    this.config = config;
-    this.#locale = this.config.locale;
-    this.#version = this.config.version || 1;
-    this.needToReload = this.config.forceToReload || false;
-    this._categories = this.config.categories ? arrayToMap<Category>(this.config.categories, "name") : new Map();
-    this.UI = new UI(/*this.#locale, messages[LanguageCode.Fr] as ConsentMessages, this.categories*/);
-    this.#focusTrap = new FocusTrap(this.UI.card);
+  constructor(config: CookieConsentConfig) {
+    this.#locale = config.locale;
+    this.#version = config?.version || "1.0.0";
+    this.#forceToReload = config?.forceToReload || false;
+    this.#categories = config?.categories ? arrayToMap<Category>(config.categories, "name") : new Map();
+    this.#translations = config?.translations || {};
 
-    if (this.#translations[this.#locale]) {
-      this.dispatcher.dispatch(ConsentEvent.UiMessages, this.locale, this.#translations[this.#locale] as ConsentMessages, this.categories);
-      // this.UI.updateMessages();
-    }
-
-    if (this.categories.size > 0) {
-      this.setup();
-    }
-
-    return this;
+    this.setup();
+    this.addListeners();
+    this.render();
+    this.updateMessages();
+    this.checkConsentSaved();
   }
 
   setup() {
-    // Parse script tags and get config from them
-    const categoriesFromScriptTags: Map<string, Category> = createCategoriesFromScriptTags('script[type="cookie-consent"]');
-
+    const categoriesFromScriptTags: Map<string, Category> = this.createCategoriesFromScriptTags('script[type="cookie-consent"]');
     // Merge config categories to categoriesFromScriptTags
-    for (const [categoryName, category] of this._categories) {
+    for (const [categoryName, category] of this.#categories) {
       const existingCategoryFST: Category | undefined = categoriesFromScriptTags.get(categoryName);
-      // The category already exists so add or merge...
+      // The category already exists so merge...
       if (existingCategoryFST) {
-        existingCategoryFST.translations = { ...existingCategoryFST.translations, ...category.translations };
+        existingCategoryFST.addTranslations(category.translations);
         // loop cookies
         for (const [cookieName, cookie] of category.cookies) {
           const existingCookie: Cookie | undefined = existingCategoryFST.cookies.get(cookieName);
           if (existingCookie) {
-            existingCookie.translations = { ...existingCategoryFST.translations, ...category.translations };
+            existingCookie.addTranslations(cookie.translations);
             existingCookie.addScripts(cookie.scripts);
             existingCookie.addTokens(cookie.tokens);
-            //If the description from the script tag is empty, replace it with the description of the cookie created in JavaScript, provided that
+            // If the description from the script tag is empty, replace it with the description of the cookie created in JavaScript, provided that
             // it is not empty either.
             if (existingCookie.description.length === 0 && cookie.description.length !== 0) {
               existingCookie.description = cookie.description;
@@ -162,185 +77,211 @@ export class CookieConsent {
       }
     }
 
-    this._categories = categoriesFromScriptTags;
-    this.updateFromStorage();
+    this.#categories = categoriesFromScriptTags;
+  }
 
-    /*if (typeof this.config.messages === "function") {
-      try {
-        this.UI.messages = this.config.messages.call(null, this.#translations[this.locale] as ConsentMessages); // provide an empty consentMessages obj
-      } catch (error: any) {
-        if (error instanceof Error) {
-          console.error(error.message);
-        }
+  checkConsentSaved() {
+    const consentSaved: DeserializedConsent | undefined = this.#store.deserialize();
+    if (consentSaved) {
+      // Check version before show the card
+      if (this.#version !== consentSaved.version) {
+        // Show the card
+        showElement(this.#card.$el);
+        showElement(this.#card.$version);
       }
-    }*/
-
-    // Events
-    /*this.UI.card.addEventListener(ConsentEvent.Change, (e: any) => {
-      const cookieChanged: Cookie = e.detail.cookie;
-      const category: Category | undefined = this._categories.get(cookieChanged.categoryName);
-
-      if (category) {
-        const cookie: Cookie | undefined = category.cookies.get(cookieChanged.name);
-        if (cookie) {
-          if (!this.needToReload) this.needToReload = !e.detail.input.checked && cookie.isEnabled;
-          cookie.accepted = e.detail.input.checked;
-        }
-      }
-    });*/
-
-    this.dispatcher.addListener(ConsentEvent.Save, async () => {
-      await this.update(ConsentEvent.Save);
-      this.hide();
-    });
-
-    this.dispatcher.addListener(ConsentEvent.AcceptAll, async () => {
-      await this.update(ConsentEvent.AcceptAll);
-      this.hide();
-    });
-
-    this.dispatcher.addListener(ConsentEvent.Reject, async () => {
-      await this.update(ConsentEvent.Reject);
-      this.hide();
-    });
-
-    this.enableSelected().then(() => {
-      this.UI.render(categoriesFromScriptTags).then((card) => {
-        document.body.appendChild(card);
-      });
-    });
-  }
-
-  show() {
-    this.UI.card.style.display = "block";
-    this.UI.card.removeAttribute("hidden");
-    this.UI.card.setAttribute("aria-hidden", "false");
-    this.UI.card.setAttribute("tabindex", "0");
-    this.#focusTrap.listen();
-    this.dispatcher.dispatch(ConsentEvent.Show);
-  }
-
-  hide() {
-    this.UI.card.setAttribute("hidden", "hidden");
-    this.UI.card.style.display = "none";
-    this.UI.card.setAttribute("aria-hidden", "true");
-    this.UI.card.setAttribute("tabindex", "-1");
-    this.#focusTrap.dispose();
-  }
-
-  onShow(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.Show, () => callback.call(null, this.card, this));
-  }
-
-  onHide(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.Hide, () => callback.call(null, this.card, this));
-  }
-
-  onSave(callback: (consent: DeserializedConsent, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.Save, () => callback.call(null, this.deserializeConsent(), this));
-  }
-
-  onAcceptAll(callback: (consent: DeserializedConsent, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.AcceptAll, () => callback.call(null, this.deserializeConsent(), this));
-  }
-
-  onReject(callback: (consent: DeserializedConsent, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.Reject, () => callback.call(null, this.deserializeConsent(), this));
-  }
-
-  onChange(callback: (consent: DeserializedConsent, input: HTMLInputElement, cookie: Cookie, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.Change, (...args: [HTMLInputElement, Cookie]) => {
-      callback.call(null, this.deserializeConsent(), ...args, this);
-    });
-  }
-
-  onOpenParams(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.OpenParams, () => {
-      callback.call(null, this.card, this);
-    });
-  }
-
-  onCloseParams(callback: (card: HTMLDivElement, cookieConsent?: CookieConsent) => void) {
-    this.dispatcher.addListener(ConsentEvent.CloseParams, () => {
-      callback.call(null, this.card, this);
-    });
-  }
-
-  private async update(eventName: ConsentEvent): Promise<void> {
-    switch (eventName) {
-      case ConsentEvent.Save:
-        await this.enableSelected();
-        break;
-      case ConsentEvent.AcceptAll:
-        await this.enableAll(true);
-        this.UI.update(this._categories);
-        break;
-      case ConsentEvent.Reject:
-        await this.enableAll(false).then(() => {
-          this.UI.update(this._categories);
-        });
-        break;
-    }
-
-    // Set consent cookie
-    this.save();
-
-    if (this.config.forceToReload || this.needToReload) {
-      window.location.reload();
-      this.needToReload = false;
-    }
-  }
-
-  private updateFromStorage() {
-    const consentSaved: DeserializedConsent | undefined = this.deserializeConsent();
-    if (consentSaved === undefined) {
-      this.show();
-      return;
-    }
-
-    // Show the consent card if versions don't match
-    if (consentSaved.version !== this.version) {
-      this.enableAll(false).then(() => {
-        this.show();
-      });
-    } else {
-      consentSaved?.cookies.forEach((item) => {
-        const category: Category | undefined = this.categories.get(item.categoryName);
-        const cookie: Cookie | undefined = category?.cookies.get(item.name);
-        if (cookie && cookie.isRevocable) {
-          cookie.accepted = item.accepted;
-        }
-      });
-    }
-  }
-
-  /**
-   * Call on ConsentEvent.AcceptAll
-   * Set all cookies accepted at true
-   */
-  private enableAll(value: boolean): Promise<void[]> {
-    let cookiePromises: Promise<void>[] = [];
-    this._categories.forEach((category: Category) => {
-      category.cookies.forEach((cookie) => {
-        if (cookie.isRevocable) {
-          if (cookie.isAccepted && !value) this.needToReload = true;
-          cookie.accepted = value;
-          if (value) {
-            cookiePromises.push(cookie.enable());
-          } else {
-            cookiePromises.push(cookie.disable());
+      consentSaved.cookies.forEach((cookie) => {
+        const c: Cookie | undefined = this.#categories.get(cookie.categoryName)?.cookies.get(cookie.name);
+        if (c) {
+          c.accepted = cookie.isAccepted;
+          if (cookie.isAccepted) {
+            (async () => c.enable())();
           }
         }
       });
-    });
-
-    return Promise.all(cookiePromises);
+    }
   }
 
-  private enableSelected(): Promise<void[]> {
+  private addListeners() {
+    this.#dispatcher.addListener(ConsentEvent.OpenSettings, this.onOpenSettings.bind(this));
+    this.#dispatcher.addListener(ConsentEvent.CloseSettings, this.onCloseSettings.bind(this));
+    this.#dispatcher.addListener(ConsentEvent.CookieChange, this.onCookieChange.bind(this));
+    this.#dispatcher.addListener(ConsentEvent.Reject, this.onReject.bind(this));
+    this.#dispatcher.addListener(ConsentEvent.AcceptAll, this.onAcceptAll.bind(this));
+    this.#dispatcher.addListener(ConsentEvent.Save, this.onSave.bind(this));
+  }
+
+  private onOpenSettings() {
+    // Open first category or already open
+    const $firstCategoryContent: HTMLDivElement | null = this.#card.$el.querySelector(".cc_category .cc_category_content");
+    if ($firstCategoryContent !== null) {
+      showElement($firstCategoryContent);
+      // Add focus on first category's cookie
+      const $firstCookieInput: HTMLInputElement | null = $firstCategoryContent.querySelector('.cc_cookie input[type="checkbox"]');
+      if ($firstCookieInput !== null) {
+        $firstCookieInput.focus();
+      }
+    }
+    // Show btnSave
+    showElement(this.#card.btnSave);
+    hideElement(this.#card.btnAcceptAll);
+  }
+
+  private onCloseSettings() {
+    const $categoriesContent: NodeListOf<HTMLDivElement> | null = this.#card.$el.querySelectorAll(".cc_category .cc_category_content");
+    if ($categoriesContent) {
+      for (const $categoriesContentElement of $categoriesContent) {
+        hideElement($categoriesContentElement);
+      }
+    }
+    // Hide btnSave
+    hideElement(this.#card.btnSave);
+    showElement(this.#card.btnAcceptAll);
+  }
+
+  /**
+   * Save cookie consent into "document.cookie" with an expiration date: currentMonth + 11
+   * @private
+   */
+  private async onSave() {
+    try {
+      this.saveUserConsent();
+      await this.toggleCookies(); // Enable/Disable cookies
+      // Reload the webpage if wanted
+      if (this.#forceToReload) {
+        window.location.reload();
+      }
+      hideElement(this.#card.$el);
+    } catch (e) {
+      if (e instanceof Error) {
+        throw new Error(e.message);
+      }
+    }
+  }
+
+  private onReject() {
+    const cookiesDisablingPromises: Promise<void>[] = [];
+    this.#categories.forEach((category) => {
+      category.cookies.forEach((cookie) => {
+        if (cookie.isEnabled) this.#forceToReload = true;
+        cookie.accepted = false;
+        cookiesDisablingPromises.push(cookie.disable());
+      });
+    });
+
+    (async () => {
+      try {
+        await Promise.all(cookiesDisablingPromises);
+        this.saveUserConsent();
+        if (this.#forceToReload) {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("An error occurred:", error);
+      }
+    })();
+  }
+
+  private onAcceptAll() {}
+
+  private onCookieChange() {
+    this.#store.data = { version: this.#version, categories: this.#categories };
+  }
+
+  private createCategoriesFromScriptTags(selector: string): Map<string, Category> {
+    let categories: Map<string, Category> = new Map();
+    const $scripts: HTMLScriptElement[] = Array.from(document.querySelectorAll<HTMLScriptElement>(selector));
+
+    for (const $script of $scripts) {
+      // Get the category name and description
+      const categoryName: string = $script.getAttribute("data-cc-category-name")?.trim() || "";
+      const categoryDescription: string = $script.getAttribute("data-cc-category-description")?.trim() || "";
+
+      // If the name is missing, the script tag will not be processed.
+      if (!isAttributeValid(categoryName)) {
+        console.error(`Name is missing on: ${$script.outerHTML} is ignored.`);
+        // Go to the next script tag
+        continue;
+      }
+
+      // Retrieve category or creating a new one
+      let category: Category =
+        categories.get(categoryName) !== undefined
+          ? categories.get(categoryName)!
+          : new Category({
+              name: categoryName,
+              description: categoryDescription,
+              cookies: new Map(),
+            });
+
+      // Retrieve data need to create a Cookie later
+      const cookieName: string = $script.getAttribute("data-cc-name")?.trim() || "";
+      const cookieDescription: string = $script.getAttribute("data-cc-description")?.trim() || "";
+      const cookieDomain: string = $script.getAttribute("data-cc-domain")?.trim() || "";
+      const cookieRevocable: boolean = $script.hasAttribute("data-cc-revocable");
+      const cookieTokensStr: string = $script.getAttribute("data-cc-tokens") || "";
+
+      // Parse tokens
+      let tokens: string[] = [];
+      if (isAttributeValid(cookieTokensStr)) {
+        tokens = cookieTokensStr.split(",").map((token) => token.trim());
+      }
+
+      // Getting cookie or not...
+      const cookie: Cookie | undefined = category.cookies.get(cookieName);
+
+      if (!cookie) {
+        category.addCookie({
+          name: cookieName,
+          description: cookieDescription,
+          domain: cookieDomain,
+          tokens: tokens,
+          scripts: [$script],
+          revocable: cookieRevocable,
+        });
+      } else {
+        cookie.addScripts([$script]);
+        cookie.addTokens(tokens);
+      }
+
+      categories.set(categoryName, category);
+    }
+
+    return categories;
+  }
+
+  private render() {
+    // Create category
+    this.#categories.forEach((category) => {
+      this.#card.addCategory(category.element);
+      // Cookie elements
+      category.cookies.forEach((cookie) => {
+        category.element.addCookieElement(cookie.element);
+      });
+    });
+
+    // Set messages into html elements
+    document.body.appendChild(this.#card.$el);
+  }
+
+  private saveUserConsent() {
+    this.#store.data = {
+      version: this.#version,
+      categories: this.#categories,
+    };
+    let expireDate = new Date();
+    expireDate.setMonth(expireDate.getMonth() + 11);
+    document.cookie = `${this.#cookieKey}=${this.#store.serialize()}; expires=${expireDate.toUTCString()}; path=/; SameSite=Lax;`;
+  }
+
+  /**
+   * Enable or disable cookie
+   * @returns {Promise<void[]>}
+   * @private
+   */
+  private toggleCookies(): Promise<void[]> {
     let cookiePromises: Promise<void>[] = [];
 
-    this._categories.forEach((category: Category) => {
+    this.#categories.forEach((category: Category) => {
       category.cookies.forEach((cookie: Cookie) => {
         if (cookie.isRevocable && cookie.isAccepted) {
           cookiePromises.push(cookie.enable());
@@ -352,47 +293,31 @@ export class CookieConsent {
     return Promise.all(cookiePromises);
   }
 
-  private save() {
-    let expireDate = new Date();
-    expireDate.setMonth(expireDate.getMonth() + 11);
-    document.cookie = `${this.#cookieToken}=${this.serializeConsent()}; expires=${expireDate.toUTCString()}; path=/; SameSite=Lax;`;
-  }
+  updateMessages() {
+    // Update Card messages
+    if (this.#translations.hasOwnProperty(this.#locale)) {
+      this.#card.updateMessages(<CardMessages>this.#translations[this.#locale]);
+    }
+    // Update categories messages
+    this.#categories.forEach((category) => {
+      if (category.translations.hasOwnProperty(this.#locale)) {
+        category.element.updateMessages(<{ name: string; description: string }>category.translations[this.#locale]);
+      }
 
-  /**
-   * Stringify userConsent
-   * @private
-   */
-  private serializeConsent(): string {
-    let consent: DeserializedConsent = {
-      version: this.config.version,
-      cookies: [],
-    };
-
-    this._categories.forEach(function (category: Category) {
-      category.cookies.forEach((cookie, cookieName) => {
-        consent.cookies.push({
-          categoryName: category.name,
-          name: cookieName,
-          accepted: cookie.isAccepted,
-          isRevocable: cookie.isRevocable,
-        });
+      // Update cookies messages
+      category.cookies.forEach((cookie) => {
+        if (cookie.translations.hasOwnProperty(this.#locale)) {
+          cookie.element.updateMessages(<{ name: string; description: string }>category.translations[this.#locale]);
+        }
       });
     });
-
-    return JSON.stringify(consent);
   }
 
-  private deserializeConsent() {
-    const consentSaved: string | undefined = getCookieValue(this.#cookieToken);
-    if (consentSaved) {
-      return JSON.parse(consentSaved);
-    }
+  show() {
+    showElement(this.#card.$el);
   }
 
-  async removeConsent(): Promise<void> {
-    const expireDate = new Date("1970");
-    let domain: string = location.hostname.replace("www", "");
-    document.cookie = `${this.#cookieToken}=; expires=${expireDate.toUTCString()}; Domain=${domain}; Max-Age=0; path=/;`;
-    await this.enableAll(false);
+  hide() {
+    hideElement(this.#card.$el);
   }
 }

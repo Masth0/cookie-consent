@@ -5,9 +5,12 @@ export enum ConsentEvent {
   AcceptAll = "cc:acceptAll",
   Reject = "cc:reject",
   Change = "cc:change",
-  OpenParams = "cc:params:open",
-  CloseParams = "cc:params:close",
+  CookieChange = "cc:cookie:change",
+  OpenSettings = "cc:settings:open",
+  CloseSettings = "cc:settings:close",
   UiMessages = "cc:ui:messages", // Update messages in UI
+  LocaleChange = "cc:locale",
+  CategoryMessages = "cc:category:messages",
 }
 
 export default class EventDispatcher {
@@ -45,6 +48,8 @@ export default class EventDispatcher {
 
   dispatch<T extends any[]>(eventName: ConsentEvent, ...eventData: T) {
     if (this.#listeners[eventName]) {
+      // const consoleStyle = 'padding: 3px; background-color: lightblue; color: black;';
+      // console.log(`%cDispatch event: ${eventName.toUpperCase()} listeners(${this.#listeners[eventName].length})`, consoleStyle);
       for (const callback of this.#listeners[eventName]) {
         callback.call(null, ...eventData);
       }
