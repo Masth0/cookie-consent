@@ -6,6 +6,7 @@ import { Cookie } from "./Cookie.ts";
 import { CardElement, CardMessages } from "./ui/CardElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 import { hideElement, showElement } from "./ui/helpers.ts";
+import FocusTrap from "./FocusTrap.ts";
 
 export interface CookieConsentConfig {
   locale: LanguageCode | string;
@@ -32,6 +33,7 @@ export class CookieConsent {
   #store: Store = new Store(this.#cookieKey);
   #dispatcher: EventDispatcher = EventDispatcher.getInstance();
   #card: CardElement = new CardElement();
+  #focusTrap: FocusTrap;
 
   constructor(config: CookieConsentConfig) {
     this.#locale = config.locale;
@@ -39,7 +41,8 @@ export class CookieConsent {
     this.#forceToReload = config?.forceToReload || false;
     this.#categories = config?.categories ? arrayToMap<Category>(config.categories, "name") : new Map();
     this.#translations = config?.translations || {};
-
+    this.#focusTrap = new FocusTrap(this.#card.$el);
+    
     this.setup();
     this.addListeners();
     this.render();
@@ -86,7 +89,7 @@ export class CookieConsent {
       // Check version before show the card
       if (this.#version !== consentSaved.version) {
         // Show the card
-        showElement(this.#card.$el);
+        this.show();
         showElement(this.#card.$version);
       }
       consentSaved.cookies.forEach((cookie) => {
@@ -98,6 +101,8 @@ export class CookieConsent {
           }
         }
       });
+    } else {
+      this.show();
     }
   }
 
@@ -150,7 +155,7 @@ export class CookieConsent {
       if (this.#forceToReload) {
         window.location.reload();
       }
-      hideElement(this.#card.$el);
+      this.hide();
     } catch (e) {
       if (e instanceof Error) {
         throw new Error(e.message);
@@ -181,7 +186,9 @@ export class CookieConsent {
     })();
   }
 
-  private onAcceptAll() {}
+  private onAcceptAll() {
+  
+  }
 
   private onCookieChange() {
     this.#store.data = { version: this.#version, categories: this.#categories };
@@ -292,6 +299,9 @@ export class CookieConsent {
     });
     return Promise.all(cookiePromises);
   }
+  
+  enableAllCookies() {
+  }
 
   updateMessages() {
     // Update Card messages
@@ -315,9 +325,13 @@ export class CookieConsent {
 
   show() {
     showElement(this.#card.$el);
+    this.#focusTrap.updateTargets();
+    this.#focusTrap.firstTarget?.focus();
+    this.#focusTrap.listen();
   }
 
   hide() {
     hideElement(this.#card.$el);
+    this.#focusTrap.dispose();
   }
 }

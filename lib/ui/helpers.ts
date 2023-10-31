@@ -60,6 +60,6 @@ export function showElement(element: HTMLElement | Element) {
     }
     
     if (element.getAttribute("tabindex")) {
-        element.setAttribute("tabindex", "1");
+        element.setAttribute("tabindex", "0");
     }
 }
