@@ -10,7 +10,7 @@ const findFocusableElements = function (container?: HTMLElement): HTMLElement[] 
     "details > summary:first-of-type",
     "video[controls]",
     "audio[controls]",
-    '[tabindex]',
+    "[tabindex]",
   ];
   const selectorStr: string = selectors.join(",");
   let elements: NodeListOf<HTMLElement> = parent.querySelectorAll(selectorStr);
@@ -23,7 +23,7 @@ const findFocusableElements = function (container?: HTMLElement): HTMLElement[] 
       result.push(element);
     }
   }
-  
+
   return result;
 };
 

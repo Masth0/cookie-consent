@@ -42,7 +42,7 @@ export class CookieConsent {
     this.#categories = config?.categories ? arrayToMap<Category>(config.categories, "name") : new Map();
     this.#translations = config?.translations || {};
     this.#focusTrap = new FocusTrap(this.#card.$el);
-    
+
     this.setup();
     this.addListeners();
     this.render();
@@ -186,8 +186,16 @@ export class CookieConsent {
     })();
   }
 
-  private onAcceptAll() {
-  
+  private async onAcceptAll(): Promise<void> {
+    try {
+      await this.enableAllCookies();
+      this.saveUserConsent();
+      this.hide();
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(e.message);
+      }
+    }
   }
 
   private onCookieChange() {
@@ -290,17 +298,31 @@ export class CookieConsent {
 
     this.#categories.forEach((category: Category) => {
       category.cookies.forEach((cookie: Cookie) => {
-        if (cookie.isRevocable && cookie.isAccepted) {
+        if (cookie.isRevocable && cookie.isAccepted && !cookie.isEnabled) {
           cookiePromises.push(cookie.enable());
         } else {
+          // If the cookie was previously accepted and enabled refresh, we need to reload to make the changes
           cookiePromises.push(cookie.disable());
+          if (!this.#forceToReload) this.#forceToReload = true;
         }
       });
     });
     return Promise.all(cookiePromises);
   }
-  
+
   enableAllCookies() {
+    let cookiePromises: Promise<void>[] = [];
+
+    this.#categories.forEach((category: Category) => {
+      category.cookies.forEach((cookie: Cookie) => {
+        if (cookie.isRevocable) {
+          cookie.accepted = true;
+          cookiePromises.push(cookie.enable());
+        }
+      });
+    });
+
+    return Promise.all(cookiePromises);
   }
 
   updateMessages() {
