@@ -214,11 +214,10 @@ export class Cookie {
   private createScriptTag(script: HTMLScriptElement) {
     if (script.type !== "cookie-consent") return;
     const copy = <HTMLScriptElement>Cookie.copyScriptTag(script);
-
+    
+    copy.type = copy.dataset.type || "text/javascript";
     if (copy.dataset.src) {
       copy.src = copy.dataset.src;
-    } else {
-      copy.type = copy.dataset.type || "text/javascript";
     }
 
     return copy;
