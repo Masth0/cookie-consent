@@ -207,6 +207,24 @@ export class CookieConsent {
     const $scripts: HTMLScriptElement[] = Array.from(document.querySelectorAll<HTMLScriptElement>(selector));
 
     for (const $script of $scripts) {
+      
+      // TODO
+      // Check all translations present languageCode, name and description
+      if ($script.dataset.ccTranslations) {
+        try {
+          const translations = JSON.parse($script.dataset.ccTranslations);
+          for (const transKey in translations) {
+            // Uppercase the first char
+            const key = transKey.charAt(0).toUpperCase() + transKey.slice(1);
+            console.log(key, key in LanguageCode);
+          }
+        } catch (e) {
+          if (e instanceof Error) {
+            console.error(e.message);
+          }
+        }
+      }
+      
       // Get the category name and description
       const categoryName: string = $script.getAttribute("data-cc-category-name")?.trim() || "";
       const categoryDescription: string = $script.getAttribute("data-cc-category-description")?.trim() || "";
