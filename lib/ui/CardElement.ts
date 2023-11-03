@@ -93,8 +93,8 @@ export class CardElement {
 
   private render() {
     this.#topbar.appendChild(this.#btnContinueWithoutAccepting);
-    this.#header.appendChild(this.#title);
     this.#header.appendChild(this.#version);
+    this.#header.appendChild(this.#title);
     this.#header.appendChild(this.#description);
     this.#footer.appendChild(this.#btnSettings);
     this.#footer.appendChild(this.#btnReject);
