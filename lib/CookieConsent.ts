@@ -334,6 +334,9 @@ export class CookieConsent {
     this.#categories.forEach((category) => {
       if (category.translations.hasOwnProperty(this.#locale)) {
         category.element.updateMessages(<{ name: string; description: string }>category.translations[this.#locale]);
+      } else {
+        // If translation isn't present take name and description from new instance params, new Category([name], [description]...)
+        category.element.updateMessages({ name: category.name, description: category.description });
       }
 
       // Update cookies messages
