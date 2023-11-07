@@ -2,6 +2,7 @@ import { CardMessages } from "./ui/CardElement.ts";
 
 /**
  * LanguageCode
+ * @Source https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
  * @Source https://fr.wikipedia.org/wiki/Liste_des_codes_ISO_639-1
  */
 export enum LanguageCode {
@@ -191,6 +192,12 @@ export enum LanguageCode {
   Za = "za",
   Zh = "zh",
   Zu = "zu",
+}
+
+export function checkLanguageCode(code: LanguageCode | string) {
+  if (!Object.keys(LanguageCode).includes(code)) {
+    throw new Error(code + " is not an ISO 639-1 language code, adding translations aborted");
+  }
 }
 
 export const messages: { [key in LanguageCode | string]?: CardMessages } = {
