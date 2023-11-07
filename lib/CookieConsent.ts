@@ -1,7 +1,7 @@
-import { LanguageCode } from "./Translations.ts";
+import { checkLanguageCode, LanguageCode } from "./Translations.ts";
 import { Category } from "./Category.ts";
 import { DeserializedConsent, Store } from "./Store.ts";
-import { arrayToMap, isAttributeValid } from "./utils.ts";
+import { arrayToMap, checkRequiredScriptTagAttributes, isAttributeValid } from "./utils.ts";
 import { Cookie } from "./Cookie.ts";
 import { CardElement, CardMessages } from "./ui/CardElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
@@ -203,12 +203,22 @@ export class CookieConsent {
   }
 
   private createCategoriesFromScriptTags(selector: string): Map<string, Category> {
+    // 1. CategoryName ?
+    // 2. CategoryDescription ?
+    // 3. CookieName ?
+    // 4. CookieDescription ?
+    // 5. IsRevocable ?
+    // 6. Tokens ? useless if not revocable
+    // 7. Translations ? check languageCodes
+    
     let categories: Map<string, Category> = new Map();
     const $scripts: HTMLScriptElement[] = Array.from(document.querySelectorAll<HTMLScriptElement>(selector));
 
     for (const $script of $scripts) {
-      
-      // TODO
+      // First check if the script tag has all attributes required before to do anything
+      // If the script tag is not eligible skip it and go to the following
+      console.log(checkRequiredScriptTagAttributes($script));
+    
       // Check all translations present languageCode, name and description
       if ($script.dataset.ccTranslations) {
         try {
@@ -216,7 +226,7 @@ export class CookieConsent {
           for (const transKey in translations) {
             // Uppercase the first char
             const key = transKey.charAt(0).toUpperCase() + transKey.slice(1);
-            console.log(key, key in LanguageCode);
+            checkLanguageCode(key);
           }
         } catch (e) {
           if (e instanceof Error) {

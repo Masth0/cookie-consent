@@ -22,7 +22,20 @@ export function arrayToMap<T extends { [key: string]: any }>(src: T[], property?
 }
 
 export function getCookieValue(name: string): string | undefined {
-  const value = "; " + document.cookie;
-  let parts = value.split("; " + name + "=");
+  const value: string = "; " + document.cookie;
+  let parts: string[] = value.split("; " + name + "=");
   return parts.length < 2 ? undefined : parts.pop()?.split(";").shift();
+}
+
+export function checkRequiredScriptTagAttributes(scriptTag: HTMLScriptElement) {
+  const attrRefs: string[] = ["data-cc-category-name", "data-cc-name"];// Todo make an Enum
+  const attrPresents: string[] = [];
+  
+  for (const attr of scriptTag.attributes) {
+    if (attrRefs.indexOf(attr.name) !== -1) {
+      attrPresents.push(attr.name);
+    }
+  }
+  
+  return attrPresents.length === attrRefs.length;
 }
