@@ -194,11 +194,23 @@ export enum LanguageCode {
   Zu = "zu",
 }
 
+
+export interface ScriptTagTranslations {
+  categoryName: string;
+  categoryDescription: string;
+  cookieName: string;
+  cookieDescription: string;
+}
+
 export function checkLanguageCode(code: LanguageCode | string) {
   if (!Object.keys(LanguageCode).includes(code)) {
     throw new Error(code + " is not an ISO 639-1 language code, adding translations aborted");
   }
 }
+//
+// export function checkScriptTranslations(data: ScriptTagTranslations) {
+//     const translations = JSON.parse(data);
+// }
 
 export const messages: { [key in LanguageCode | string]?: CardMessages } = {
   [LanguageCode.En]: {

@@ -3,7 +3,7 @@ import { getAllCookies } from "./utils.ts";
 import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 
-type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
+export type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
 export interface CookieConfig {
   name: string;
   description: string;

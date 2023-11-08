@@ -1,3 +1,5 @@
+import { ScriptTagAttributes } from "./CookieConsent.ts";
+
 export function getAllCookies(): Array<{ name: string; value: string }> {
   return document.cookie.split(";").map((str) => {
     const [name, value] = str.split("=").map((v) => v.trim());
@@ -28,14 +30,14 @@ export function getCookieValue(name: string): string | undefined {
 }
 
 export function checkRequiredScriptTagAttributes(scriptTag: HTMLScriptElement) {
-  const attrRefs: string[] = ["data-cc-category-name", "data-cc-name"];// Todo make an Enum
+  const requiredAttributes: string[] = [ScriptTagAttributes["CategoryName"], ScriptTagAttributes["CookieName"]];
   const attrPresents: string[] = [];
   
   for (const attr of scriptTag.attributes) {
-    if (attrRefs.indexOf(attr.name) !== -1) {
+    if (requiredAttributes.indexOf(attr.name) !== -1 && isAttributeValid(attr.value)) {
       attrPresents.push(attr.name);
     }
   }
   
-  return attrPresents.length === attrRefs.length;
+  return attrPresents.length === requiredAttributes.length;
 }

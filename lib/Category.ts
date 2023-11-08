@@ -2,7 +2,7 @@ import { Cookie, CookieConfig } from "./Cookie.ts";
 import { LanguageCode } from "./Translations.ts";
 import { CategoryElement } from "./ui/CategoryElement.ts";
 
-type CategoryTranslations = { [key in LanguageCode | string]?: Pick<Category, "name" | "description"> };
+export type CategoryTranslations = { [key in LanguageCode | string]?: Pick<Category, "name" | "description"> };
 export type CategoryMessages = Pick<Category, "name" | "description">;
 export interface CategoryConfig {
   name: string;

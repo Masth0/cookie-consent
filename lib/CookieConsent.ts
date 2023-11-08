@@ -1,8 +1,8 @@
-import { checkLanguageCode, LanguageCode } from "./Translations.ts";
-import { Category } from "./Category.ts";
+import { checkLanguageCode, LanguageCode, ScriptTagTranslations } from "./Translations.ts";
+import { Category, CategoryTranslations } from "./Category.ts";
 import { DeserializedConsent, Store } from "./Store.ts";
 import { arrayToMap, checkRequiredScriptTagAttributes, isAttributeValid } from "./utils.ts";
-import { Cookie } from "./Cookie.ts";
+import { Cookie, CookieTranslations } from "./Cookie.ts";
 import { CardElement, CardMessages } from "./ui/CardElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 import { hideElement, showElement } from "./ui/helpers.ts";
@@ -16,6 +16,17 @@ export interface CookieConsentConfig {
   translations?: { [key in LanguageCode]?: CardMessages };
   onSave?: (config: CookieConsentConfig) => void;
   onReject?: (config: CookieConsentConfig) => void;
+}
+
+export enum ScriptTagAttributes {
+  CategoryName = "data-cc-category-name",
+  CategoryDescription = "data-cc-category-description",
+  CookieName = "data-cc-name",
+  CookieDescription = "data-cc-description",
+  CookieDomain = "data-cc-domain",
+  CookieTokens = "data-cc-tokens",
+  translations = "data-cc-translations",
+  Revocable = "data-cc-revocable",
 }
 
 export class CookieConsent {
@@ -217,13 +228,32 @@ export class CookieConsent {
     for (const $script of $scripts) {
       // First check if the script tag has all attributes required before to do anything
       // If the script tag is not eligible skip it and go to the following
-      console.log(checkRequiredScriptTagAttributes($script));
-    
-      // Check all translations present languageCode, name and description
-      if ($script.dataset.ccTranslations) {
+      if (!checkRequiredScriptTagAttributes($script)) {
+        console.error($script, `Required attributes (${ScriptTagAttributes.CategoryName}, ${ScriptTagAttributes.CookieName}) are missing`);
+        continue;
+      }
+      
+      // Get the category name and description
+      const categoryName: string = $script.getAttribute("data-cc-category-name")?.trim() as string;
+      const categoryDescription: string = $script.getAttribute("data-cc-category-description")?.trim() || "";
+      
+      // Retrieve category by name or creating a new one
+      let category: Category =
+        categories.get(categoryName) !== undefined
+          ? categories.get(categoryName)!
+          : new Category({
+            name: categoryName,
+            description: categoryDescription,
+            cookies: new Map(),
+          });
+      
+      // Translations
+      // Check languageCode, name and description
+      let scriptTranslations: {[key: LanguageCode|string]: ScriptTagTranslations} | undefined = undefined;
+      if ($script.dataset.ccTranslations && isAttributeValid($script.dataset.ccTranslations)) {
         try {
-          const translations = JSON.parse($script.dataset.ccTranslations);
-          for (const transKey in translations) {
+          scriptTranslations = JSON.parse($script.dataset.ccTranslations);
+          for (const transKey in scriptTranslations) {
             // Uppercase the first char
             const key = transKey.charAt(0).toUpperCase() + transKey.slice(1);
             checkLanguageCode(key);
@@ -235,33 +265,31 @@ export class CookieConsent {
         }
       }
       
-      // Get the category name and description
-      const categoryName: string = $script.getAttribute("data-cc-category-name")?.trim() || "";
-      const categoryDescription: string = $script.getAttribute("data-cc-category-description")?.trim() || "";
-
-      // If the name is missing, the script tag will not be processed.
-      if (!isAttributeValid(categoryName)) {
-        console.error(`Name is missing on: ${$script.outerHTML} is ignored.`);
-        // Go to the next script tag
-        continue;
+      // Make CategoryTranslations
+      let categoryTranslations: CategoryTranslations = {};
+      let cookieTranslations: CookieTranslations = {};
+      for (const transKey in scriptTranslations) {
+        if (scriptTranslations[transKey].categoryName && scriptTranslations[transKey].categoryDescription) {
+          categoryTranslations[transKey] = {
+            name: scriptTranslations[transKey].categoryName,
+            description: scriptTranslations[transKey].categoryDescription,
+          };
+        }
+        if (scriptTranslations[transKey].cookieName && scriptTranslations[transKey].cookieDescription) {
+          cookieTranslations[transKey] = {
+            name: scriptTranslations[transKey].cookieName,
+            description: scriptTranslations[transKey].cookieDescription,
+          };
+        }
       }
-
-      // Retrieve category or creating a new one
-      let category: Category =
-        categories.get(categoryName) !== undefined
-          ? categories.get(categoryName)!
-          : new Category({
-              name: categoryName,
-              description: categoryDescription,
-              cookies: new Map(),
-            });
+      category.addTranslations(categoryTranslations);
 
       // Retrieve data need to create a Cookie later
-      const cookieName: string = $script.getAttribute("data-cc-name")?.trim() || "";
-      const cookieDescription: string = $script.getAttribute("data-cc-description")?.trim() || "";
-      const cookieDomain: string = $script.getAttribute("data-cc-domain")?.trim() || "";
-      const cookieRevocable: boolean = $script.hasAttribute("data-cc-revocable");
-      const cookieTokensStr: string = $script.getAttribute("data-cc-tokens") || "";
+      const cookieName: string = $script.getAttribute(ScriptTagAttributes["CookieName"])?.trim() || "";
+      const cookieDescription: string = $script.getAttribute(ScriptTagAttributes["CookieDescription"])?.trim() || "";
+      const cookieDomain: string = $script.getAttribute(ScriptTagAttributes["CookieDomain"])?.trim() || "";
+      const cookieRevocable: boolean = $script.hasAttribute(ScriptTagAttributes["Revocable"]);
+      const cookieTokensStr: string = $script.getAttribute(ScriptTagAttributes["CookieTokens"]) || "";
 
       // Parse tokens
       let tokens: string[] = [];
@@ -271,7 +299,6 @@ export class CookieConsent {
 
       // Getting cookie or not...
       const cookie: Cookie | undefined = category.cookies.get(cookieName);
-
       if (!cookie) {
         category.addCookie({
           name: cookieName,
@@ -280,15 +307,18 @@ export class CookieConsent {
           tokens: tokens,
           scripts: [$script],
           revocable: cookieRevocable,
+          translations: cookieTranslations
         });
       } else {
         cookie.addScripts([$script]);
         cookie.addTokens(tokens);
+        cookie.addTranslations(cookieTranslations);
       }
 
       categories.set(categoryName, category);
     }
-
+    
+    console.log(categories);
     return categories;
   }
 
