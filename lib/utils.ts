@@ -32,12 +32,12 @@ export function getCookieValue(name: string): string | undefined {
 export function checkRequiredScriptTagAttributes(scriptTag: HTMLScriptElement) {
   const requiredAttributes: string[] = [ScriptTagAttributes["CategoryName"], ScriptTagAttributes["CookieName"]];
   const attrPresents: string[] = [];
-  
+
   for (const attr of scriptTag.attributes) {
     if (requiredAttributes.indexOf(attr.name) !== -1 && isAttributeValid(attr.value)) {
       attrPresents.push(attr.name);
     }
   }
-  
+
   return attrPresents.length === requiredAttributes.length;
 }

@@ -194,7 +194,6 @@ export enum LanguageCode {
   Zu = "zu",
 }
 
-
 export interface ScriptTagTranslations {
   categoryName: string;
   categoryDescription: string;

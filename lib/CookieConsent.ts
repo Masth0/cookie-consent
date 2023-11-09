@@ -214,14 +214,6 @@ export class CookieConsent {
   }
 
   private createCategoriesFromScriptTags(selector: string): Map<string, Category> {
-    // 1. CategoryName ?
-    // 2. CategoryDescription ?
-    // 3. CookieName ?
-    // 4. CookieDescription ?
-    // 5. IsRevocable ?
-    // 6. Tokens ? useless if not revocable
-    // 7. Translations ? check languageCodes
-    
     let categories: Map<string, Category> = new Map();
     const $scripts: HTMLScriptElement[] = Array.from(document.querySelectorAll<HTMLScriptElement>(selector));
 
@@ -232,24 +224,24 @@ export class CookieConsent {
         console.error($script, `Required attributes (${ScriptTagAttributes.CategoryName}, ${ScriptTagAttributes.CookieName}) are missing`);
         continue;
       }
-      
+
       // Get the category name and description
       const categoryName: string = $script.getAttribute("data-cc-category-name")?.trim() as string;
       const categoryDescription: string = $script.getAttribute("data-cc-category-description")?.trim() || "";
-      
+
       // Retrieve category by name or creating a new one
       let category: Category =
         categories.get(categoryName) !== undefined
           ? categories.get(categoryName)!
           : new Category({
-            name: categoryName,
-            description: categoryDescription,
-            cookies: new Map(),
-          });
-      
+              name: categoryName,
+              description: categoryDescription,
+              cookies: new Map(),
+            });
+
       // Translations
       // Check languageCode, name and description
-      let scriptTranslations: {[key: LanguageCode|string]: ScriptTagTranslations} | undefined = undefined;
+      let scriptTranslations: { [key: LanguageCode | string]: ScriptTagTranslations } | undefined = undefined;
       if ($script.dataset.ccTranslations && isAttributeValid($script.dataset.ccTranslations)) {
         try {
           scriptTranslations = JSON.parse($script.dataset.ccTranslations);
@@ -264,7 +256,7 @@ export class CookieConsent {
           }
         }
       }
-      
+
       // Make CategoryTranslations
       let categoryTranslations: CategoryTranslations = {};
       let cookieTranslations: CookieTranslations = {};
@@ -307,7 +299,7 @@ export class CookieConsent {
           tokens: tokens,
           scripts: [$script],
           revocable: cookieRevocable,
-          translations: cookieTranslations
+          translations: cookieTranslations,
         });
       } else {
         cookie.addScripts([$script]);
@@ -317,8 +309,7 @@ export class CookieConsent {
 
       categories.set(categoryName, category);
     }
-    
-    console.log(categories);
+
     return categories;
   }
 
@@ -400,7 +391,7 @@ export class CookieConsent {
       // Update cookies messages
       category.cookies.forEach((cookie) => {
         if (cookie.translations.hasOwnProperty(this.#locale)) {
-          cookie.element.updateMessages(<{ name: string; description: string }>category.translations[this.#locale]);
+          cookie.element.updateMessages(<{ name: string; description: string }>cookie.translations[this.#locale]);
         }
       });
     });
