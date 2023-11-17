@@ -8,8 +8,6 @@ export enum ConsentEvent {
   CookieChange = "cc:cookie:change",
   OpenSettings = "cc:settings:open",
   CloseSettings = "cc:settings:close",
-  UiMessages = "cc:ui:messages", // Update messages in UI
-  LocaleChange = "cc:locale",
   CategoryMessages = "cc:category:messages",
 }
 
