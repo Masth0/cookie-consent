@@ -11,6 +11,7 @@ export interface CookieConfig {
   domain?: string; // Needed to remove his cookies by tokens
   tokens?: string[];
   scripts?: HTMLScriptElement[];
+  iframes?: HTMLIFrameElement[];
   translations?: CookieTranslations;
 }
 
@@ -85,6 +86,7 @@ export class Cookie {
   #domain: string;
   #tokens: string[];
   #scripts: HTMLScriptElement[];
+  #iframes: HTMLIFrameElement[]; // Todo retrieve iframes with data-cc-name
   #translations: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
   #element: CookieElement;
   #dispatcher: EventDispatcher = EventDispatcher.getInstance();
@@ -96,6 +98,7 @@ export class Cookie {
     this.#domain = config?.domain || "";
     this.#tokens = config?.tokens || [];
     this.#scripts = config?.scripts || [];
+    this.#iframes = config?.iframes || [];
     this.#translations = config?.translations || {};
     // Create html element
     this.#element = new CookieElement(this.#name);
@@ -159,6 +162,10 @@ export class Cookie {
         this.scripts.push(newScript);
       }
     }
+  }
+  
+  addIframes(iframes: HTMLIFrameElement[]) {
+    this.#iframes = [...this.#iframes, ...iframes];
   }
 
   addTokens(tokens: string[]): string[] {
