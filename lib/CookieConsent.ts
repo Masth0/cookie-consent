@@ -305,10 +305,11 @@ export class CookieConsent {
         };
         if ($script.tagName === 'IFRAME') {
           cookieConfig.iframes = [<HTMLIFrameElement>$script];
+          // Todo add IframePlaceholderMessages
+          // Merge Iframe translations with cookie translations
         } else {
           cookieConfig.scripts = [<HTMLScriptElement>$script];
         }
-        // Todo add IframePlaceholderMessages
         category.addCookie(cookieConfig);
       } else {
         if ($script.tagName === 'IFRAME') {

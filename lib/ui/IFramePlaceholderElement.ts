@@ -1,6 +1,7 @@
 import { createHTMLElement } from "./helpers.ts";
 
 export interface IFramePlaceholderMessages {
+  
   title: string;
   description: string;
   btnLabel: string;

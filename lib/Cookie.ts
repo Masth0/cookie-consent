@@ -4,13 +4,14 @@ import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 import { IFramePlaceholderElement, IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
 
+
 interface CookieMessages {
   name: string;
   description: string;
-  iframeMessages?: IFramePlaceholderMessages
+  iframe: IFramePlaceholderMessages;
 }
 
-export type CookieTranslations = { [key in LanguageCode | string]?: CookieMessages };
+export type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
 export interface CookieConfig {
   name: string;
   description: string;
