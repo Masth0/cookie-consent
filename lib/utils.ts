@@ -29,11 +29,11 @@ export function getCookieValue(name: string): string | undefined {
   return parts.length < 2 ? undefined : parts.pop()?.split(";").shift();
 }
 
-export function checkRequiredScriptTagAttributes(scriptTag: HTMLScriptElement) {
+export function checkRequiredTagAttributes(tag: HTMLScriptElement|HTMLIFrameElement): boolean {
   const requiredAttributes: string[] = [ScriptTagAttributes["CategoryName"], ScriptTagAttributes["CookieName"]];
   const attrPresents: string[] = [];
 
-  for (const attr of scriptTag.attributes) {
+  for (const attr of tag.attributes) {
     if (requiredAttributes.indexOf(attr.name) !== -1 && isAttributeValid(attr.value)) {
       attrPresents.push(attr.name);
     }

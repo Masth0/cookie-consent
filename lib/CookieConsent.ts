@@ -1,8 +1,8 @@
 import { checkLanguageCode, LanguageCode, ScriptTagTranslations } from "./Translations.ts";
 import { Category, CategoryTranslations } from "./Category.ts";
 import { DeserializedConsent, Store } from "./Store.ts";
-import { arrayToMap, checkRequiredScriptTagAttributes, isAttributeValid } from "./utils.ts";
-import { Cookie, CookieTranslations } from "./Cookie.ts";
+import { arrayToMap, checkRequiredTagAttributes, isAttributeValid } from "./utils.ts";
+import { Cookie, CookieConfig, CookieTranslations } from "./Cookie.ts";
 import { CardElement, CardMessages } from "./ui/CardElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 import { hideElement, showElement } from "./ui/helpers.ts";
@@ -62,7 +62,7 @@ export class CookieConsent {
   }
 
   setup() {
-    const categoriesFromScriptTags: Map<string, Category> = this.createCategoriesFromScriptTags('script[type="cookie-consent"]');
+    const categoriesFromScriptTags: Map<string, Category> = this.createCategoriesFromScriptTags('script[type="cookie-consent"], iframe[data-cc-name]');
     // Merge config categories to categoriesFromScriptTags
     for (const [categoryName, category] of this.#categories) {
       const existingCategoryFST: Category | undefined = categoriesFromScriptTags.get(categoryName);
@@ -186,6 +186,7 @@ export class CookieConsent {
 
     (async () => {
       try {
+        this.hide();
         await Promise.all(cookiesDisablingPromises);
         this.saveUserConsent();
         if (this.#forceToReload) {
@@ -199,9 +200,9 @@ export class CookieConsent {
 
   private async onAcceptAll(): Promise<void> {
     try {
+      this.hide();
       await this.enableAllCookies();
       this.saveUserConsent();
-      this.hide();
     } catch (e) {
       if (e instanceof Error) {
         console.error(e.message);
@@ -215,12 +216,13 @@ export class CookieConsent {
 
   private createCategoriesFromScriptTags(selector: string): Map<string, Category> {
     let categories: Map<string, Category> = new Map();
-    const $scripts: HTMLScriptElement[] = Array.from(document.querySelectorAll<HTMLScriptElement>(selector));
+    const $scripts: (HTMLScriptElement|HTMLIFrameElement)[] = Array.from(document.querySelectorAll<HTMLScriptElement|HTMLIFrameElement>(selector));
 
     for (const $script of $scripts) {
+      if ($script.tagName === 'IFRAME') console.log($script);
       // First check if the script tag has all attributes required before to do anything
       // If the script tag is not eligible skip it and go to the following
-      if (!checkRequiredScriptTagAttributes($script)) {
+      if (!checkRequiredTagAttributes($script)) {
         console.error($script, `Required attributes (${ScriptTagAttributes.CategoryName}, ${ScriptTagAttributes.CookieName}) are missing`);
         continue;
       }
@@ -291,25 +293,39 @@ export class CookieConsent {
 
       // Getting cookie or not...
       const cookie: Cookie | undefined = category.cookies.get(cookieName);
+      let cookieConfig: CookieConfig;
       if (!cookie) {
-        category.addCookie({
+        cookieConfig = {
           name: cookieName,
           description: cookieDescription,
           domain: cookieDomain,
           tokens: tokens,
-          scripts: [$script],
           revocable: cookieRevocable,
           translations: cookieTranslations,
-        });
+        };
+        if ($script.tagName === 'IFRAME') {
+          cookieConfig.iframes = [<HTMLIFrameElement>$script];
+        } else {
+          cookieConfig.scripts = [<HTMLScriptElement>$script];
+        }
+        // Todo add IframePlaceholderMessages
+        category.addCookie(cookieConfig);
       } else {
-        cookie.addScripts([$script]);
+        if ($script.tagName === 'IFRAME') {
+          cookie.addIframes([<HTMLIFrameElement>$script]);
+          // Todo add IframePlaceholderMessages
+        } else {
+          cookie.addScripts([<HTMLScriptElement>$script]);
+        }
         cookie.addTokens(tokens);
         cookie.addTranslations(cookieTranslations);
       }
 
       categories.set(categoryName, category);
     }
-
+    
+    
+    console.log(categories);
     return categories;
   }
 

@@ -1,9 +1,7 @@
 import "./style.css";
-import {CookieConsent} from "../lib/CookieConsent.ts";
-import {Category} from "../lib/Category.ts";
-import {messages} from "../lib/Translations.ts";
-
-
+import { CookieConsent } from "../lib/CookieConsent.ts";
+import { Category } from "../lib/Category.ts";
+import { consentMessages } from "../lib/Translations.ts";
 
 
 // To set messages
@@ -14,7 +12,7 @@ const consent = new CookieConsent({
     version: "1.0.0",
     categories: [categoryMandatory],
     translations: {
-        ...messages
+        ...consentMessages
     }
 });
 

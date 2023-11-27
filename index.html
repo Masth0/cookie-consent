@@ -2,7 +2,6 @@
 <html lang="">
 <head>
     <meta charset="UTF-8"/>
-    <link rel="icon" type="image/svg+xml" href="/vite.svg"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Cookie consent</title>
 
@@ -42,12 +41,12 @@
     <!-- Google Maps -->
     <script type="cookie-consent"
             data-cc-category-name="Functional"
-            data-cc-name="Google maps"
+            data-cc-name="Google Maps"
             data-cc-category-description="Functional cookies help perform certain functionalities like sharing the content of the website on social media platforms, collecting feedback, and other third-party features."
             data-cc-description="Google Maps is a web service that provides detailed information about geographical regions and sites worldwide"
             data-cc-revocable
             data-cc-tokens="OGPC"
-            src="https://maps.googleapis.com/maps/api/js"></script>
+            data-cc-src="https://maps.googleapis.com/maps/api/js"></script>
 
 </head>
 <body>
@@ -61,6 +60,20 @@
     <br>
     <button type="button" class="js-btn-locale" data-language="Fr">Fr</button>
     <button type="button" class="js-btn-locale" data-language="en">En</button>
+    <br>
+    <iframe
+      data-cc-category-name="Functional"
+      data-cc-name="Google Maps"
+      width="600"
+      height="450"
+      style="border:0"
+      loading="lazy"
+      allowfullscreen
+      referrerpolicy="no-referrer-when-downgrade"
+      data-cc-src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBUbPuE2YPfpiZk8vAqUsdEhKy-O3suD1k
+&q=Space+Needle,Seattle+WA">
+    </iframe>
+
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

@@ -206,12 +206,8 @@ export function checkLanguageCode(code: LanguageCode | string) {
     throw new Error(code + " is not an ISO 639-1 language code, adding translations aborted");
   }
 }
-//
-// export function checkScriptTranslations(data: ScriptTagTranslations) {
-//     const translations = JSON.parse(data);
-// }
 
-export const messages: { [key in LanguageCode | string]?: CardMessages } = {
+export const consentMessages: { [key in LanguageCode | string]?: CardMessages } = {
   [LanguageCode.En]: {
     version: "",
     closeSettings: "Close settings",

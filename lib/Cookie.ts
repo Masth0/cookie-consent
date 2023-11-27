@@ -1,9 +1,16 @@
 import { LanguageCode } from "./Translations.ts";
-import { getAllCookies } from "./utils.ts";
+import { checkRequiredTagAttributes, getAllCookies } from "./utils.ts";
 import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
+import { IFramePlaceholderElement, IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
 
-export type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
+interface CookieMessages {
+  name: string;
+  description: string;
+  iframeMessages?: IFramePlaceholderMessages
+}
+
+export type CookieTranslations = { [key in LanguageCode | string]?: CookieMessages };
 export interface CookieConfig {
   name: string;
   description: string;
@@ -89,6 +96,7 @@ export class Cookie {
   #iframes: HTMLIFrameElement[]; // Todo retrieve iframes with data-cc-name
   #translations: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
   #element: CookieElement;
+  #iframePlaceholderElement: IFramePlaceholderElement;
   #dispatcher: EventDispatcher = EventDispatcher.getInstance();
 
   constructor(config: CookieConfig) {
@@ -103,6 +111,10 @@ export class Cookie {
     // Create html element
     this.#element = new CookieElement(this.#name);
     this.#element.updateMessages({ name: this.#name, description: this.#description });
+    // Create IFramePlaceholderElement
+    // Todo provide translations messages from the cookie creation
+    this.#iframePlaceholderElement = new IFramePlaceholderElement(this.#categoryName, this.#name)
+    this.#iframePlaceholderElement.updateMessages();
     if (this.isRevocable) {
       this.#dispatcher.addListener(ConsentEvent.CookieChange, this.onCookieChange.bind(this));
     }
@@ -115,6 +127,7 @@ export class Cookie {
     return new Promise((resolve, reject) => {
       if (this.isEnabled) reject("Cookie " + this.name + " is already enabled");
       let newScriptTags: HTMLScriptElement[] = [];
+      let newIframesTags: HTMLIFrameElement[] = [];
 
       if (this.#scripts) {
         this.#scripts.forEach((script) => {
@@ -127,6 +140,19 @@ export class Cookie {
 
         this.#scripts = newScriptTags;
       }
+      
+      if (this.#iframes) {
+        this.#iframes.forEach((iframe) => {
+          const copy = this.createIframeTag(iframe);
+          if (copy) {
+            iframe.insertAdjacentElement("beforebegin", copy);
+            iframe.parentElement?.removeChild(iframe);
+          }
+        });
+        
+        this.#iframes = newIframesTags;
+      }
+      
       this.#enabled = true;
       resolve();
     });
@@ -223,10 +249,21 @@ export class Cookie {
     const copy = <HTMLScriptElement>Cookie.copyScriptTag(script);
 
     copy.type = copy.dataset.type || "text/javascript";
-    if (copy.dataset.src) {
-      copy.src = copy.dataset.src;
+    if (copy.dataset.ccSrc !== undefined) {
+      copy.setAttribute('src', copy.dataset.ccSrc);
     }
 
+    return copy;
+  }
+  
+  private createIframeTag(iframe: HTMLIFrameElement) {
+    if (!checkRequiredTagAttributes(iframe)) return;
+    const copy = <HTMLIFrameElement>Cookie.copyIframeTag(iframe);
+    
+    if (copy.dataset.ccSrc !== undefined) {
+      copy.setAttribute('src', copy.dataset.ccSrc);
+    }
+    
     return copy;
   }
 
@@ -239,6 +276,18 @@ export class Cookie {
       copy.innerHTML = script.innerHTML;
     }
 
+    return copy;
+  }
+  
+  private static copyIframeTag(script: HTMLIFrameElement): HTMLIFrameElement {
+    const copy: HTMLIFrameElement = document.createElement("iframe");
+    
+    for (let i = 0; i < script.attributes.length; i++) {
+      const attr = script.attributes[i];
+      copy.setAttribute(attr.name, attr.value);
+      copy.innerHTML = script.innerHTML;
+    }
+    
     return copy;
   }
 }
