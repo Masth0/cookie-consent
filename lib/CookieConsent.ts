@@ -303,6 +303,7 @@ export class CookieConsent {
           revocable: cookieRevocable,
           translations: cookieTranslations,
         };
+
         if ($script.tagName === 'IFRAME') {
           cookieConfig.iframes = [<HTMLIFrameElement>$script];
           // Todo add IframePlaceholderMessages

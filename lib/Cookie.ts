@@ -1,4 +1,4 @@
-import { LanguageCode } from "./Translations.ts";
+import {checkLanguageCode, LanguageCode} from "./Translations.ts";
 import { checkRequiredTagAttributes, getAllCookies } from "./utils.ts";
 import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
@@ -89,6 +89,10 @@ export class Cookie {
     return this.#element;
   }
 
+  get iframePlaceholderElement(): IFramePlaceholderElement {
+    return this.#iframePlaceholderElement;
+  }
+
   #categoryName: string = "";
   #name: string;
   #description: string;
@@ -116,12 +120,16 @@ export class Cookie {
     // Create html element
     this.#element = new CookieElement(this.#name);
     this.#element.updateMessages({ name: this.#name, description: this.#description });
-    // Create IFramePlaceholderElement
-    // Todo provide translations messages from the cookie creation
-    this.#iframePlaceholderElement = new IFramePlaceholderElement(this.#categoryName, this.#name)
-    // this.#iframePlaceholderElement.updateMessages({})
     if (this.isRevocable) {
       this.#dispatcher.addListener(ConsentEvent.CookieChange, this.onCookieChange.bind(this));
+    }
+
+    this.displayIFramePlaceholder();
+  }
+
+  displayIFramePlaceholder() {
+    for (const iframe of this.#iframes) {
+      iframe.insertAdjacentElement('beforebegin', this.iframePlaceholderElement.$el);
     }
   }
 
@@ -196,7 +204,30 @@ export class Cookie {
   }
   
   addIframes(iframes: HTMLIFrameElement[]) {
+    // Check required attributes to create the IFramePlaceholder: data-cc-translations
+    let placeholderTranslations;
+    for (const iframe of iframes) {
+      placeholderTranslations = JSON.parse(iframe.getAttribute("data-cc-translations") as string);
+      if (!placeholderTranslations) continue;
+      for (const transKey in placeholderTranslations) {
+        // Uppercase the first char
+        const key = transKey.charAt(0).toUpperCase() + transKey.slice(1);
+        checkLanguageCode(key);
+        if (typeof placeholderTranslations[transKey] !== "string") {
+          throw new Error("For iframe, translation must be a string. {\"fr\":\"Your message\"} ");
+        }
+      }
+    }
+
+    if (placeholderTranslations) {
+      if (!this.iframePlaceholderElement) {
+        console.log(placeholderTranslations)
+        this.#iframePlaceholderElement = new IFramePlaceholderElement(this, placeholderTranslations);
+      }
+    }
+
     this.#iframes = [...this.#iframes, ...iframes];
+    this.displayIFramePlaceholder();
   }
 
   addTokens(tokens: string[]): string[] {

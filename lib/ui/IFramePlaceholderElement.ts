@@ -1,45 +1,32 @@
 import { createHTMLElement } from "./helpers.ts";
+import {LanguageCode} from "../Translations.ts";
+import {Cookie} from "../Cookie.ts";
 
-export interface IFramePlaceholderMessages {
-  
-  title: string;
-  description: string;
-  btnLabel: string;
-}
 
 export class IFramePlaceholderElement {
   get $el(): HTMLDivElement {
     return this.#placeholder;
   }
-  
-  #categoryName: string;
-  #cookieName: string;
-  #messages: IFramePlaceholderMessages;
+
+  #cookie: Cookie;
+  #translations: { [key in LanguageCode | string]?: string };
   #placeholder: HTMLDivElement;
-  #title: HTMLHeadingElement;
-  #description: HTMLParagraphElement;
-  #btn: HTMLButtonElement;
-  
-  constructor(categoryName: string, cookieName: string, messages?: IFramePlaceholderMessages) {
-    this.#categoryName = categoryName;
-    this.#cookieName = cookieName;
-    if (messages) {
-      this.#messages = messages;
+  #message: HTMLParagraphElement;
+
+  constructor(cookie: Cookie, translations?: { [key in LanguageCode | string]?: string }) {
+    this.#cookie = cookie;
+    if (translations) {
+      this.#translations = translations;
     }
     this.#placeholder = createHTMLElement<HTMLDivElement>("DIV", {
-      "class": "cc_placeholder"
+      "class": "cc_iframe_placeholder"
     });
-    this.#title = createHTMLElement<HTMLHeadingElement>('h3', {"class": "cc_placeholder_title"});
-    this.#description = createHTMLElement<HTMLHeadingElement>('p', {"class": "cc_placeholder_description"});
-    this.#btn = createHTMLElement<HTMLButtonElement>('button', {
-      "class": "cc_button"
-    });
+    this.#message = createHTMLElement<HTMLParagraphElement>('p', {"class": "cc_placeholder_message"});
+    this.#placeholder.appendChild(this.#message);
   }
   
-  updateMessages(messages: IFramePlaceholderMessages) {
-    this.#title.innerText = messages.title;
-    this.#description.innerText = messages.description;
-    this.#btn.innerText = messages.btnLabel;
+  updateMessages(message: string) {
+    this.#message.innerText = message;
   }
   
 }

@@ -28,7 +28,8 @@
 }
 
 /* Variables */
-.cc_card {
+.cc_card,
+.cc_iframe_placeholder {
     /* Colors */
     --cc-color-reject-rgb: 24, 93, 231;
     --cc-color-accept-all-rgb: 24, 93, 231;
@@ -71,6 +72,7 @@
     --cc-card-radius: 16px;
     --cc-card-bg: #ffffff;
     --cc-card-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.3);
+
     /* Gap */
     --cc-gap: 16px;
     --cc-gap-m: 12px;
@@ -466,4 +468,14 @@
 .cc_btn_settings {
     margin-left: 0;
     margin-right: auto;
+}
+
+.cc_iframe_placeholder {
+    position: relative;
+    display: block;
+    text-align: center;
+    background-color: var(--cc-color-grey-1);
+    border: 1px solid var(--cc-color-grey-5);
+    color: var(--cc-color-text);
+    padding: 24px;
 }
