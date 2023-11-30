@@ -76,6 +76,10 @@ export class Cookie {
   get scripts(): HTMLScriptElement[] {
     return this.#scripts;
   }
+  
+  get iframes(): HTMLIFrameElement[] {
+    return this.#iframes;
+  }
 
   get translations(): CookieTranslations {
     return this.#translations;
@@ -115,7 +119,7 @@ export class Cookie {
     // Create IFramePlaceholderElement
     // Todo provide translations messages from the cookie creation
     this.#iframePlaceholderElement = new IFramePlaceholderElement(this.#categoryName, this.#name)
-    this.#iframePlaceholderElement.updateMessages();
+    // this.#iframePlaceholderElement.updateMessages({})
     if (this.isRevocable) {
       this.#dispatcher.addListener(ConsentEvent.CookieChange, this.onCookieChange.bind(this));
     }

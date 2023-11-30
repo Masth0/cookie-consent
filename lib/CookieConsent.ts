@@ -325,7 +325,6 @@ export class CookieConsent {
       categories.set(categoryName, category);
     }
     
-    
     console.log(categories);
     return categories;
   }

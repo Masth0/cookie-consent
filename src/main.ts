@@ -2,7 +2,7 @@ import "./style.css";
 import { CookieConsent } from "../lib/CookieConsent.ts";
 import { Category } from "../lib/Category.ts";
 import { consentMessages } from "../lib/Translations.ts";
-import { Cookie } from "../lib";
+import { Cookie } from "../lib/Cookie.ts";
 
 
 // To set messages
@@ -18,8 +18,17 @@ const categoryMandatory = new Category({
     }
 });
 
-const cookieTest = new Cookie("test", "description de test");
-cookieTest.translations = {
+const cookieTest = new Cookie({
+    name: "test",
+    description: "description de test",
+    domain: "",
+    iframes: [],
+    revocable: false,
+    scripts: [],
+    tokens: [],
+    translations: {}
+});
+cookieTest.addTranslations({
     "fr": {
         name: "aa",
         description: "azez",
@@ -29,7 +38,7 @@ cookieTest.translations = {
             btnLabel: ""
         }
     }
-};
+    });
 
 const consent = new CookieConsent({
     locale: "fr",
