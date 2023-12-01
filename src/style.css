@@ -478,4 +478,15 @@
     border: 1px solid var(--cc-color-grey-5);
     color: var(--cc-color-text);
     padding: 24px;
+    border-radius: 8px;
+}
+
+.cc_placeholder_inner {
+    display: inline-block;
+    padding: 24px;
+    border-radius: calc(24px - 18px);
+    margin-top: 0;
+    margin-bottom: 0;
+    font-family: arial, sans-serif;
+    background-color: var(--cc-color-grey-2);
 }

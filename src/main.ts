@@ -31,12 +31,7 @@ const cookieTest = new Cookie({
 cookieTest.addTranslations({
     "fr": {
         name: "aa",
-        description: "azez",
-        iframe: {
-            title: "",
-            description: "",
-            btnLabel: ""
-        }
+        description: "azez"
     }
     });
 

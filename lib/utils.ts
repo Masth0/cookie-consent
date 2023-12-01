@@ -29,7 +29,7 @@ export function getCookieValue(name: string): string | undefined {
   return parts.length < 2 ? undefined : parts.pop()?.split(";").shift();
 }
 
-export function checkRequiredTagAttributes(tag: HTMLScriptElement|HTMLIFrameElement): boolean {
+export function checkRequiredTagAttributes(tag: HTMLScriptElement | HTMLIFrameElement): boolean {
   const requiredAttributes: string[] = [ScriptTagAttributes["CategoryName"], ScriptTagAttributes["CookieName"]];
   const attrPresents: string[] = [];
 
@@ -50,10 +50,10 @@ export function checkRequiredTagAttributes(tag: HTMLScriptElement|HTMLIFrameElem
  */
 export function enableCookieIframes(cookieName: string) {
   const $iframes: NodeListOf<HTMLIFrameElement> = document.querySelectorAll(`iframe[data-cc-name="${cookieName}"]`);
-  
+
   for (const $iframe of $iframes) {
-    if (!$iframe.hasAttribute('src') && $iframe.dataset.ccSrc) {
-      $iframe.setAttribute('src', $iframe.dataset.ccSrc);
+    if (!$iframe.hasAttribute("src") && $iframe.dataset.ccSrc) {
+      $iframe.setAttribute("src", $iframe.dataset.ccSrc);
     }
   }
 }
@@ -66,10 +66,10 @@ export function enableCookieIframes(cookieName: string) {
  */
 export function disableCookieIframes(cookieName: string) {
   const $iframes: NodeListOf<HTMLIFrameElement> = document.querySelectorAll(`iframe[data-cc-name="${cookieName}"]`);
-  
+
   for (const $iframe of $iframes) {
-    if ($iframe.hasAttribute('src')) {
-      $iframe.setAttribute('data-cc-src', $iframe.src);
+    if ($iframe.hasAttribute("src")) {
+      $iframe.setAttribute("data-cc-src", $iframe.src);
     }
   }
 }

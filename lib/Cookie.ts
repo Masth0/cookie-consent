@@ -1,15 +1,9 @@
-import {checkLanguageCode, LanguageCode} from "./Translations.ts";
+import { checkLanguageCode, LanguageCode } from "./Translations.ts";
 import { checkRequiredTagAttributes, getAllCookies } from "./utils.ts";
 import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
-import { IFramePlaceholderElement, IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
+import { IFramePlaceholderElement } from "./ui/IFramePlaceholderElement.ts";
 
-
-interface CookieMessages {
-  name: string;
-  description: string;
-  iframe: IFramePlaceholderMessages;
-}
 
 export type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
 export interface CookieConfig {
@@ -76,7 +70,7 @@ export class Cookie {
   get scripts(): HTMLScriptElement[] {
     return this.#scripts;
   }
-  
+
   get iframes(): HTMLIFrameElement[] {
     return this.#iframes;
   }
@@ -89,7 +83,7 @@ export class Cookie {
     return this.#element;
   }
 
-  get iframePlaceholderElement(): IFramePlaceholderElement {
+  get iframePlaceholderElement(): IFramePlaceholderElement | undefined {
     return this.#iframePlaceholderElement;
   }
 
@@ -105,7 +99,7 @@ export class Cookie {
   #iframes: HTMLIFrameElement[]; // Todo retrieve iframes with data-cc-name
   #translations: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
   #element: CookieElement;
-  #iframePlaceholderElement: IFramePlaceholderElement;
+  #iframePlaceholderElement: IFramePlaceholderElement | undefined = undefined;
   #dispatcher: EventDispatcher = EventDispatcher.getInstance();
 
   constructor(config: CookieConfig) {
@@ -123,13 +117,13 @@ export class Cookie {
     if (this.isRevocable) {
       this.#dispatcher.addListener(ConsentEvent.CookieChange, this.onCookieChange.bind(this));
     }
-
-    this.displayIFramePlaceholder();
   }
 
   displayIFramePlaceholder() {
     for (const iframe of this.#iframes) {
-      iframe.insertAdjacentElement('beforebegin', this.iframePlaceholderElement.$el);
+      if (this.iframePlaceholderElement) {
+        iframe.insertAdjacentElement("beforebegin", this.iframePlaceholderElement.$el);
+      }
     }
   }
 
@@ -153,7 +147,7 @@ export class Cookie {
 
         this.#scripts = newScriptTags;
       }
-      
+
       if (this.#iframes) {
         this.#iframes.forEach((iframe) => {
           const copy = this.createIframeTag(iframe);
@@ -162,10 +156,10 @@ export class Cookie {
             iframe.parentElement?.removeChild(iframe);
           }
         });
-        
+
         this.#iframes = newIframesTags;
       }
-      
+
       this.#enabled = true;
       resolve();
     });
@@ -202,7 +196,7 @@ export class Cookie {
       }
     }
   }
-  
+
   addIframes(iframes: HTMLIFrameElement[]) {
     // Check required attributes to create the IFramePlaceholder: data-cc-translations
     let placeholderTranslations;
@@ -214,19 +208,21 @@ export class Cookie {
         const key = transKey.charAt(0).toUpperCase() + transKey.slice(1);
         checkLanguageCode(key);
         if (typeof placeholderTranslations[transKey] !== "string") {
-          throw new Error("For iframe, translation must be a string. {\"fr\":\"Your message\"} ");
+          throw new Error('For iframe, translation must be a string. {"fr":"Your message"} ');
         }
       }
     }
 
     if (placeholderTranslations) {
       if (!this.iframePlaceholderElement) {
-        console.log(placeholderTranslations)
+        console.log(placeholderTranslations);
         this.#iframePlaceholderElement = new IFramePlaceholderElement(this, placeholderTranslations);
+        console.log(this.iframePlaceholderElement);
       }
     }
 
     this.#iframes = [...this.#iframes, ...iframes];
+
     this.displayIFramePlaceholder();
   }
 
@@ -286,20 +282,20 @@ export class Cookie {
 
     copy.type = copy.dataset.type || "text/javascript";
     if (copy.dataset.ccSrc !== undefined) {
-      copy.setAttribute('src', copy.dataset.ccSrc);
+      copy.setAttribute("src", copy.dataset.ccSrc);
     }
 
     return copy;
   }
-  
+
   private createIframeTag(iframe: HTMLIFrameElement) {
     if (!checkRequiredTagAttributes(iframe)) return;
     const copy = <HTMLIFrameElement>Cookie.copyIframeTag(iframe);
-    
+
     if (copy.dataset.ccSrc !== undefined) {
-      copy.setAttribute('src', copy.dataset.ccSrc);
+      copy.setAttribute("src", copy.dataset.ccSrc);
     }
-    
+
     return copy;
   }
 
@@ -314,16 +310,16 @@ export class Cookie {
 
     return copy;
   }
-  
+
   private static copyIframeTag(script: HTMLIFrameElement): HTMLIFrameElement {
     const copy: HTMLIFrameElement = document.createElement("iframe");
-    
+
     for (let i = 0; i < script.attributes.length; i++) {
       const attr = script.attributes[i];
       copy.setAttribute(attr.name, attr.value);
       copy.innerHTML = script.innerHTML;
     }
-    
+
     return copy;
   }
 }

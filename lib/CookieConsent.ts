@@ -62,7 +62,9 @@ export class CookieConsent {
   }
 
   setup() {
-    const categoriesFromScriptTags: Map<string, Category> = this.createCategoriesFromScriptTags('script[type="cookie-consent"], iframe[data-cc-name]');
+    const categoriesFromScriptTags: Map<string, Category> = this.createCategoriesFromScriptTags(
+      'script[type="cookie-consent"], iframe[data-cc-name]',
+    );
     // Merge config categories to categoriesFromScriptTags
     for (const [categoryName, category] of this.#categories) {
       const existingCategoryFST: Category | undefined = categoriesFromScriptTags.get(categoryName);
@@ -124,6 +126,8 @@ export class CookieConsent {
     this.#dispatcher.addListener(ConsentEvent.Reject, this.onReject.bind(this));
     this.#dispatcher.addListener(ConsentEvent.AcceptAll, this.onAcceptAll.bind(this));
     this.#dispatcher.addListener(ConsentEvent.Save, this.onSave.bind(this));
+    
+    this.#dispatcher.addListener(ConsentEvent.Show, this.onShow.bind(this));
   }
 
   private onOpenSettings() {
@@ -213,13 +217,19 @@ export class CookieConsent {
   private onCookieChange() {
     this.#store.data = { version: this.#version, categories: this.#categories };
   }
+  
+  private onShow() {
+    this.show();
+  }
 
   private createCategoriesFromScriptTags(selector: string): Map<string, Category> {
     let categories: Map<string, Category> = new Map();
-    const $scripts: (HTMLScriptElement|HTMLIFrameElement)[] = Array.from(document.querySelectorAll<HTMLScriptElement|HTMLIFrameElement>(selector));
+    const $scripts: (HTMLScriptElement | HTMLIFrameElement)[] = Array.from(
+      document.querySelectorAll<HTMLScriptElement | HTMLIFrameElement>(selector),
+    );
 
     for (const $script of $scripts) {
-      if ($script.tagName === 'IFRAME') console.log($script);
+      if ($script.tagName === "IFRAME") console.log($script);
       // First check if the script tag has all attributes required before to do anything
       // If the script tag is not eligible skip it and go to the following
       if (!checkRequiredTagAttributes($script)) {
@@ -304,7 +314,7 @@ export class CookieConsent {
           translations: cookieTranslations,
         };
 
-        if ($script.tagName === 'IFRAME') {
+        if ($script.tagName === "IFRAME") {
           cookieConfig.iframes = [<HTMLIFrameElement>$script];
           // Todo add IframePlaceholderMessages
           // Merge Iframe translations with cookie translations
@@ -313,7 +323,7 @@ export class CookieConsent {
         }
         category.addCookie(cookieConfig);
       } else {
-        if ($script.tagName === 'IFRAME') {
+        if ($script.tagName === "IFRAME") {
           cookie.addIframes([<HTMLIFrameElement>$script]);
           // Todo add IframePlaceholderMessages
         } else {
@@ -325,8 +335,7 @@ export class CookieConsent {
 
       categories.set(categoryName, category);
     }
-    
-    console.log(categories);
+
     return categories;
   }
 
@@ -392,6 +401,7 @@ export class CookieConsent {
   }
 
   updateMessages() {
+    console.log('LOCALE', this.#locale);
     // Update Card messages
     if (this.#translations.hasOwnProperty(this.#locale)) {
       this.#card.updateMessages(<CardMessages>this.#translations[this.#locale]);
@@ -409,6 +419,10 @@ export class CookieConsent {
       category.cookies.forEach((cookie) => {
         if (cookie.translations.hasOwnProperty(this.#locale)) {
           cookie.element.updateMessages(<{ name: string; description: string }>cookie.translations[this.#locale]);
+        }
+        // Update iframe placeholder element message
+        if (cookie.iframePlaceholderElement) {
+          cookie.iframePlaceholderElement.updateMessages(<{ message: string; btnLabel: string }>cookie.iframePlaceholderElement.translations[this.#locale]);
         }
       });
     });
