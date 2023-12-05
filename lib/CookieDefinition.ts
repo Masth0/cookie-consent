@@ -62,9 +62,8 @@ export class CookieDefinition {
 
         if (copy.dataset.src) {
           copy.src = copy.dataset.src;
-        } else {
-          copy.type = copy.dataset.type || 'text/javascript';
         }
+        copy.type = copy.dataset.type || 'text/javascript';
 
         newScriptTags.push(copy);
         script.insertAdjacentElement('beforebegin', copy);
