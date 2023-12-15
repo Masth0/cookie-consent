@@ -44,7 +44,7 @@ export class Category {
     this.#translations = config.translations || {};
     // Create html element
     this.#element = new CategoryElement(this.#name);
-    this.element.updateMessages({ name: this.#name, description: this.#description });
+    this.element.setMessages({ name: this.#name, description: this.#description });
   }
 
   /**

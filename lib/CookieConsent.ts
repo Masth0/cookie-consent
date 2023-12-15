@@ -7,6 +7,7 @@ import { CardElement, CardMessages } from "./ui/CardElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 import { hideElement, showElement } from "./ui/helpers.ts";
 import FocusTrap from "./FocusTrap.ts";
+import { IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
 
 export interface CookieConsentConfig {
   locale: LanguageCode | string;
@@ -126,7 +127,7 @@ export class CookieConsent {
     this.#dispatcher.addListener(ConsentEvent.Reject, this.onReject.bind(this));
     this.#dispatcher.addListener(ConsentEvent.AcceptAll, this.onAcceptAll.bind(this));
     this.#dispatcher.addListener(ConsentEvent.Save, this.onSave.bind(this));
-    
+
     this.#dispatcher.addListener(ConsentEvent.Show, this.onShow.bind(this));
   }
 
@@ -217,7 +218,7 @@ export class CookieConsent {
   private onCookieChange() {
     this.#store.data = { version: this.#version, categories: this.#categories };
   }
-  
+
   private onShow() {
     this.show();
   }
@@ -401,28 +402,27 @@ export class CookieConsent {
   }
 
   updateMessages() {
-    console.log('LOCALE', this.#locale);
     // Update Card messages
     if (this.#translations.hasOwnProperty(this.#locale)) {
-      this.#card.updateMessages(<CardMessages>this.#translations[this.#locale]);
+      this.#card.setMessages(<CardMessages>this.#translations[this.#locale]);
     }
     // Update categories messages
     this.#categories.forEach((category) => {
       if (category.translations.hasOwnProperty(this.#locale)) {
-        category.element.updateMessages(<{ name: string; description: string }>category.translations[this.#locale]);
+        category.element.setMessages(<{ name: string; description: string }>category.translations[this.#locale]);
       } else {
         // If translation isn't present take name and description from new instance params, new Category([name], [description]...)
-        category.element.updateMessages({ name: category.name, description: category.description });
+        category.element.setMessages({ name: category.name, description: category.description });
       }
 
       // Update cookies messages
       category.cookies.forEach((cookie) => {
         if (cookie.translations.hasOwnProperty(this.#locale)) {
-          cookie.element.updateMessages(<{ name: string; description: string }>cookie.translations[this.#locale]);
+          cookie.element.setMessages(<{ name: string; description: string }>cookie.translations[this.#locale]);
         }
         // Update iframe placeholder element message
         if (cookie.iframePlaceholderElement) {
-          cookie.iframePlaceholderElement.updateMessages(<{ message: string; btnLabel: string }>cookie.iframePlaceholderElement.translations[this.#locale]);
+          // cookie.iframePlaceholderElement.setMessages();
         }
       });
     });

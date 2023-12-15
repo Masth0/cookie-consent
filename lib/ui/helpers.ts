@@ -3,12 +3,14 @@ export const ANIMATION_DISABLED_CLASS: string = "cc_animation-disabled";
 export const OPEN_CLASS: string = "cc_is-open";
 export const HIDDEN_CLASS: string = "cc_d-none";
 
-export function createHTMLElement<T extends HTMLElement>(tag: string, attr: { [key: string]: string }): T {
+export function createHTMLElement<T extends HTMLElement>(tag: string, attr?: { [key: string]: string }): T {
     const el = <T>document.createElement(tag);
 
-    for (const elKey in attr) {
-        // Add "cc_" prefix for id and class attributes
-        el.setAttribute(elKey, attr[elKey]);
+    if (attr) {
+        for (const elKey in attr) {
+            // Add "cc_" prefix for id and class attributes
+            el.setAttribute(elKey, attr[elKey]);
+        }
     }
 
     return el;

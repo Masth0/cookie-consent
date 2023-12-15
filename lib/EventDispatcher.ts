@@ -46,7 +46,7 @@ export default class EventDispatcher {
 
   dispatch<T extends any[]>(eventName: ConsentEvent, ...eventData: T) {
     if (this.#listeners[eventName]) {
-      const consoleStyle = 'padding: 3px; background-color: lightblue; color: black;';
+      const consoleStyle = "padding: 3px; background-color: lightblue; color: black;";
       console.log(`%cDispatch event: ${eventName.toUpperCase()} listeners(${this.#listeners[eventName].length})`, consoleStyle);
       for (const callback of this.#listeners[eventName]) {
         callback.call(null, ...eventData);

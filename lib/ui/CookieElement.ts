@@ -1,5 +1,6 @@
 import {ANIMATION_DISABLED_CLASS, createHTMLElement, strToId} from "./helpers.ts";
 import EventDispatcher, {ConsentEvent} from "../EventDispatcher.ts";
+import { CcElement } from "./CcElement.ts";
 
 /* Cookie HTML
 <div class="cc_cookie">
@@ -15,24 +16,22 @@ export interface CookieMessages {
     name: string;
     description: string;
 }
-export class CookieElement {
-    get $el(): HTMLDivElement {
-        return this.#container;
-    }
 
+export class CookieElement extends CcElement<CookieMessages> {
     readonly #name: string;
-    readonly #container: HTMLDivElement;
     readonly #description: HTMLParagraphElement;
     readonly #switchContainer: HTMLDivElement;
     readonly #input: HTMLInputElement;
     readonly #label: HTMLLabelElement;
     readonly #dispatcher: EventDispatcher = EventDispatcher.getInstance();
+    protected messages: CookieMessages = {
+        name: "",
+        description: ""
+    };
 
     constructor(name: string) {
+        super({ "class": "cc_cookie" });
         this.#name = name;
-        this.#container = createHTMLElement<HTMLDivElement>("div", {
-            "class": "cc_cookie"
-        });
         this.#switchContainer = createHTMLElement<HTMLDivElement>("div", {
             "class": "cc_switch_container"
         });
@@ -53,10 +52,17 @@ export class CookieElement {
         // EventListeners
         this.addEventListeners();
     }
-
-    updateMessages(messages: {name: string, description: string}) {
-        this.#label.innerHTML = messages.name;
-        this.#description.innerHTML = messages.description;
+    
+    setMessages(messages: {name: string, description: string}) {
+        if (messages.name !== this.messages.name) {
+            this.#label.innerHTML = messages.name;
+            this.messages.name = messages.name;
+        }
+        
+        if (messages.description !== this.messages.description) {
+            this.#description.innerHTML = messages.description;
+            this.messages.description = messages.description
+        }
     }
     
     setChecked(value: boolean) {
@@ -73,7 +79,7 @@ export class CookieElement {
     private render() {
         this.#switchContainer.appendChild(this.#input);
         this.#switchContainer.appendChild(this.#label);
-        this.#container.appendChild(this.#switchContainer);
-        this.#container.appendChild(this.#description);
+        this.element.appendChild(this.#switchContainer);
+        this.element.appendChild(this.#description);
     }
 }

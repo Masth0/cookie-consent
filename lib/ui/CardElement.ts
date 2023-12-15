@@ -1,6 +1,7 @@
 import {createHTMLElement, HIDDEN_CLASS, hideElement, OPEN_CLASS, showElement} from "./helpers.ts";
 import EventDispatcher, {ConsentEvent} from "../EventDispatcher.ts";
 import {CategoryElement} from "./CategoryElement.ts";
+import { CcElement } from "./CcElement.ts";
 
 
 export interface CardMessages {
@@ -15,11 +16,7 @@ export interface CardMessages {
   acceptAll: string;
 }
 
-export class CardElement {
-  get $el(): HTMLDivElement {
-    return this.#card;
-  }
-  
+export class CardElement extends CcElement<CardMessages> {
   get $version(): HTMLDivElement {
     return this.#version;
   }
@@ -32,7 +29,6 @@ export class CardElement {
     return this.#btnAcceptAll;
   }
 
-  readonly #card: HTMLDivElement;
   readonly #topbar: HTMLDivElement;
   readonly #header: HTMLDivElement;
   readonly #body: HTMLDivElement;
@@ -46,13 +42,25 @@ export class CardElement {
   readonly #btnReject: HTMLButtonElement;
   readonly #btnAcceptAll: HTMLButtonElement;
   #dispatcher: EventDispatcher = EventDispatcher.getInstance();
+  protected messages: CardMessages = {
+    title: "",
+    description: "",
+    version: "",
+    continueWithoutAccepting: "",
+    openSettings: "",
+    closeSettings: "",
+    reject: "",
+    save: "",
+    acceptAll: "",
+  };
 
   constructor() {
-    this.#card = createHTMLElement<HTMLDivElement>("div", {
+    super({
       "class": `cc_card ${HIDDEN_CLASS}`,
       "aria-hidden": "true",
       "tabindex": '-1'
     });
+    
     this.#topbar = createHTMLElement<HTMLDivElement>("div", {"class": "cc_topbar"});
     this.#header = createHTMLElement<HTMLDivElement>("div", {"class": "cc_header"});
     this.#body = createHTMLElement<HTMLDivElement>("div", {"class": `cc_body ${HIDDEN_CLASS}`});
@@ -71,17 +79,47 @@ export class CardElement {
     this.render();
   }
 
-  updateMessages(messages: CardMessages) {
-    this.#title.innerHTML = messages.title;
-    this.#description.innerHTML = messages.description;
-    this.#version.innerHTML = messages.version;
-    this.#btnContinueWithoutAccepting.innerHTML = messages.continueWithoutAccepting;
-    this.#btnReject.innerHTML = messages.reject;
-    this.#btnAcceptAll.innerHTML = messages.acceptAll;
-    this.#btnSave.innerHTML = messages.save;
+  setMessages(messages: CardMessages) {
+    if (messages.title !== this.messages.title) {
+      this.messages.title = messages.title;
+      this.#title.innerHTML = messages.title;
+    }
+    
+    if (messages.description !== this.messages.description) {
+      this.messages.description = messages.description;
+      this.#description.innerHTML = messages.description;
+    }
+    
+    if (messages.version !== this.messages.version) {
+      this.messages.version = messages.version;
+      this.#version.innerHTML = messages.version;
+    }
+    
+    if (messages.continueWithoutAccepting !== this.messages.continueWithoutAccepting) {
+      this.messages.continueWithoutAccepting = messages.continueWithoutAccepting;
+      this.#btnContinueWithoutAccepting.innerHTML = messages.continueWithoutAccepting;
+    }
+    
+    if (messages.reject !== this.messages.reject) {
+      this.messages.reject = messages.reject
+      this.#btnReject.innerHTML = messages.reject;
+    }
+    
+    if (messages.acceptAll !== this.messages.acceptAll) {
+      this.messages.acceptAll = messages.acceptAll;
+      this.#btnAcceptAll.innerHTML = messages.acceptAll;
+    }
+    
+    if (messages.save !== this.messages.save) {
+      this.messages.save = messages.save;
+      this.#btnSave.innerHTML = messages.save;
+    }
+    
     if (this.#btnSettings.classList.contains(OPEN_CLASS)) {
+      this.messages.openSettings = messages.openSettings;
       this.#btnSettings.innerHTML = messages.closeSettings;
     } else {
+      this.messages.closeSettings = messages.closeSettings;
       this.#btnSettings.innerHTML = messages.openSettings;
     }
   }
@@ -100,10 +138,10 @@ export class CardElement {
     this.#footer.appendChild(this.#btnReject);
     this.#footer.appendChild(this.#btnAcceptAll);
     this.#footer.appendChild(this.#btnSave);
-    this.#card.appendChild(this.#topbar);
-    this.#card.appendChild(this.#header);
-    this.#card.appendChild(this.#body);
-    this.#card.appendChild(this.#footer);
+    this.element.appendChild(this.#topbar);
+    this.element.appendChild(this.#header);
+    this.element.appendChild(this.#body);
+    this.element.appendChild(this.#footer);
   }
 
   private addEventListeners() {

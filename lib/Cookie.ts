@@ -2,10 +2,9 @@ import { checkLanguageCode, LanguageCode } from "./Translations.ts";
 import { checkRequiredTagAttributes, getAllCookies } from "./utils.ts";
 import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
-import { IFramePlaceholderElement } from "./ui/IFramePlaceholderElement.ts";
+import { IFramePlaceholderElement, IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
 
-
-export type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
+export type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> & {iframe?: IFramePlaceholderMessages}};
 export interface CookieConfig {
   name: string;
   description: string;
@@ -97,7 +96,7 @@ export class Cookie {
   #tokens: string[];
   #scripts: HTMLScriptElement[];
   #iframes: HTMLIFrameElement[]; // Todo retrieve iframes with data-cc-name
-  #translations: { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> };
+  #translations: CookieTranslations;
   #element: CookieElement;
   #iframePlaceholderElement: IFramePlaceholderElement | undefined = undefined;
   #dispatcher: EventDispatcher = EventDispatcher.getInstance();
@@ -113,7 +112,7 @@ export class Cookie {
     this.#translations = config?.translations || {};
     // Create html element
     this.#element = new CookieElement(this.#name);
-    this.#element.updateMessages({ name: this.#name, description: this.#description });
+    this.#element.setMessages({ name: this.#name, description: this.#description });
     if (this.isRevocable) {
       this.#dispatcher.addListener(ConsentEvent.CookieChange, this.onCookieChange.bind(this));
     }
@@ -207,7 +206,9 @@ export class Cookie {
         // Uppercase the first char
         const key = transKey.charAt(0).toUpperCase() + transKey.slice(1);
         checkLanguageCode(key);
-        if (typeof placeholderTranslations[transKey] !== "string") {
+        if (!placeholderTranslations[transKey].hasOwnProperty("message")
+          && !placeholderTranslations[transKey].hasOwnProperty("btnLabel")
+        ) {
           throw new Error('For iframe, translation must be a string. {"fr":"Your message"} ');
         }
       }
@@ -216,8 +217,10 @@ export class Cookie {
     if (placeholderTranslations) {
       if (!this.iframePlaceholderElement) {
         console.log(placeholderTranslations);
-        this.#iframePlaceholderElement = new IFramePlaceholderElement(this, placeholderTranslations);
+        this.#iframePlaceholderElement = new IFramePlaceholderElement(this);
+        this.#iframePlaceholderElement.setMessages(placeholderTranslations);
         console.log(this.iframePlaceholderElement);
+        // TODO placeholder.setMessages...
       }
     }
 
@@ -276,7 +279,7 @@ export class Cookie {
     return cookiesFound;
   }
 
-  private createScriptTag(script: HTMLScriptElement) {
+  private createScriptTag(script: HTMLScriptElement): HTMLScriptElement | undefined {
     if (script.type !== "cookie-consent") return;
     const copy = <HTMLScriptElement>Cookie.copyScriptTag(script);
 
@@ -288,7 +291,7 @@ export class Cookie {
     return copy;
   }
 
-  private createIframeTag(iframe: HTMLIFrameElement) {
+  private createIframeTag(iframe: HTMLIFrameElement): HTMLIFrameElement | undefined {
     if (!checkRequiredTagAttributes(iframe)) return;
     const copy = <HTMLIFrameElement>Cookie.copyIframeTag(iframe);
 
