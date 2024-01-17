@@ -68,6 +68,18 @@ export class CategoryElement extends CcElement<CategoryMessages> {
         }
     }
 
+    open() {
+        this.#trigger.classList.add(OPEN_CLASS);
+        this.#inner.classList.add(OPEN_CLASS);
+        this.#inner.removeAttribute("hidden");
+    }
+
+    close() {
+        this.#trigger.classList.remove(OPEN_CLASS);
+        this.#inner.classList.remove(OPEN_CLASS);
+        this.#inner.setAttribute("hidden", "hidden");
+    }
+
     private addEventListeners() {
         /**
          * Remove ANIMATION_DISABLED_CLASS after categoryContent fadeIn to avoid the switch animation
@@ -76,13 +88,9 @@ export class CategoryElement extends CcElement<CategoryMessages> {
         this.#trigger.addEventListener("click", (e) => {
             e.preventDefault();
             if (this.#inner.classList.contains(OPEN_CLASS)) {
-                this.#trigger.classList.remove(OPEN_CLASS);
-                this.#inner.classList.remove(OPEN_CLASS);
-                this.#inner.setAttribute("hidden", "hidden");
+                this.close();
             } else {
-                this.#trigger.classList.add(OPEN_CLASS);
-                this.#inner.classList.add(OPEN_CLASS);
-                this.#inner.removeAttribute("hidden");
+                this.open();
             }
         });
     }

@@ -11,6 +11,11 @@ export enum ConsentEvent {
   CategoryMessages = "cc:category:messages",
 }
 
+export interface EventDataCookieEdition {
+  categoryName: string;
+  cookieName: string;
+}
+
 export default class EventDispatcher {
   get listeners(): { [key in string | ConsentEvent]: Function[] } {
     return this.#listeners;

@@ -3,8 +3,11 @@ import { checkRequiredTagAttributes, getAllCookies } from "./utils.ts";
 import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 import { IFramePlaceholderElement, IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
+import { ScriptTagAttributes } from "./CookieConsent.ts";
 
-export type CookieTranslations = { [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> & {iframe?: IFramePlaceholderMessages}};
+export type CookieTranslations = {
+  [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> & { iframePlaceholder?: IFramePlaceholderMessages };
+};
 export interface CookieConfig {
   name: string;
   description: string;
@@ -200,32 +203,51 @@ export class Cookie {
     // Check required attributes to create the IFramePlaceholder: data-cc-translations
     let placeholderTranslations;
     for (const iframe of iframes) {
-      placeholderTranslations = JSON.parse(iframe.getAttribute("data-cc-translations") as string);
+      placeholderTranslations = JSON.parse(iframe.getAttribute(ScriptTagAttributes.Translations) as string);
       if (!placeholderTranslations) continue;
       for (const transKey in placeholderTranslations) {
         // Uppercase the first char
         const key = transKey.charAt(0).toUpperCase() + transKey.slice(1);
         checkLanguageCode(key);
-        if (!placeholderTranslations[transKey].hasOwnProperty("message")
-          && !placeholderTranslations[transKey].hasOwnProperty("btnLabel")
-        ) {
+        if (!placeholderTranslations[transKey].hasOwnProperty("message") && !placeholderTranslations[transKey].hasOwnProperty("btnLabel")) {
           throw new Error('For iframe, translation must be a string. {"fr":"Your message"} ');
         }
       }
     }
 
+    // Add iframePlaceholder translations into the according locale key
+    for (const placeholderTranslationKey in placeholderTranslations) {
+      if (this.translations.hasOwnProperty(placeholderTranslationKey)) {
+        this.translations[placeholderTranslationKey] = {
+          name: this.translations[placeholderTranslationKey]!.name || this.name,
+          description: this.translations[placeholderTranslationKey]!.description || this.description,
+          iframePlaceholder: {
+            message: placeholderTranslations[placeholderTranslationKey].message,
+            btnLabel: placeholderTranslations[placeholderTranslationKey].btnLabel,
+          },
+        };
+      } else {
+        // When the translation according to the locale is not set, use the name and description by default
+        this.translations[placeholderTranslationKey] = {
+          name: this.name,
+          description: this.description,
+          iframePlaceholder: {
+            message: placeholderTranslations[placeholderTranslationKey].message,
+            btnLabel: placeholderTranslations[placeholderTranslationKey].btnLabel,
+          },
+        };
+      }
+    }
+
+    this.addTranslations(placeholderTranslations);
+
     if (placeholderTranslations) {
       if (!this.iframePlaceholderElement) {
-        console.log(placeholderTranslations);
         this.#iframePlaceholderElement = new IFramePlaceholderElement(this);
-        this.#iframePlaceholderElement.setMessages(placeholderTranslations);
-        console.log(this.iframePlaceholderElement);
-        // TODO placeholder.setMessages...
       }
     }
 
     this.#iframes = [...this.#iframes, ...iframes];
-
     this.displayIFramePlaceholder();
   }
 
@@ -245,11 +267,13 @@ export class Cookie {
    * @param {CookieTranslations} translations
    */
   addTranslations(translations: CookieTranslations) {
+    console.log("ADD TRANSLATIONS ", translations);
     for (const translationsKey in translations) {
       if (!this.translations.hasOwnProperty(translationsKey)) {
         this.translations[translationsKey] = translations[translationsKey];
       }
     }
+    console.log("AFTER ADD TRANSLATIONS ", this.translations);
   }
 
   private onCookieChange(name: string, checked: boolean) {

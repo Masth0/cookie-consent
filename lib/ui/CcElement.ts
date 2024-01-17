@@ -1,11 +1,5 @@
 import { createHTMLElement } from "./helpers.ts";
 
-export interface CcElementInterface<T> {
-  get $el(): HTMLDivElement;
-  readonly element: HTMLDivElement;
-  update(msg: T): void;
-}
-
 export abstract class CcElement<T> {
   get $el(): HTMLDivElement {
     return this.element;

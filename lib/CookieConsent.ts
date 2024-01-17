@@ -1,13 +1,12 @@
-import { checkLanguageCode, LanguageCode, ScriptTagTranslations } from "./Translations.ts";
-import { Category, CategoryTranslations } from "./Category.ts";
-import { DeserializedConsent, Store } from "./Store.ts";
-import { arrayToMap, checkRequiredTagAttributes, isAttributeValid } from "./utils.ts";
-import { Cookie, CookieConfig, CookieTranslations } from "./Cookie.ts";
-import { CardElement, CardMessages } from "./ui/CardElement.ts";
-import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
-import { hideElement, showElement } from "./ui/helpers.ts";
+import {checkLanguageCode, LanguageCode, ScriptTagTranslations} from "./Translations.ts";
+import {Category, CategoryTranslations} from "./Category.ts";
+import {DeserializedConsent, Store} from "./Store.ts";
+import {arrayToMap, checkRequiredTagAttributes, isAttributeValid} from "./utils.ts";
+import {Cookie, CookieConfig, CookieTranslations} from "./Cookie.ts";
+import {CardElement, CardMessages} from "./ui/CardElement.ts";
+import EventDispatcher, {ConsentEvent, EventDataCookieEdition} from "./EventDispatcher.ts";
+import {hideElement, showElement, strToId} from "./ui/helpers.ts";
 import FocusTrap from "./FocusTrap.ts";
-import { IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
 
 export interface CookieConsentConfig {
   locale: LanguageCode | string;
@@ -26,7 +25,7 @@ export enum ScriptTagAttributes {
   CookieDescription = "data-cc-description",
   CookieDomain = "data-cc-domain",
   CookieTokens = "data-cc-tokens",
-  translations = "data-cc-translations",
+  Translations = "data-cc-translations",
   Revocable = "data-cc-revocable",
 }
 
@@ -131,20 +130,25 @@ export class CookieConsent {
     this.#dispatcher.addListener(ConsentEvent.Show, this.onShow.bind(this));
   }
 
-  private onOpenSettings() {
-    // Open first category or already open
-    const $firstCategoryContent: HTMLDivElement | null = this.#card.$el.querySelector(".cc_category .cc_category_content");
-    if ($firstCategoryContent !== null) {
-      showElement($firstCategoryContent);
-      // Add focus on first category's cookie
-      const $firstCookieInput: HTMLInputElement | null = $firstCategoryContent.querySelector('.cc_cookie input[type="checkbox"]');
-      if ($firstCookieInput !== null) {
-        $firstCookieInput.focus();
+  private onOpenSettings(cookieEditionData?: EventDataCookieEdition) {
+    if (cookieEditionData !== undefined) {
+      const category: Category|undefined = this.#categories.get(cookieEditionData.categoryName);
+      const cookie: Cookie | undefined = category?.cookies.get(cookieEditionData.cookieName);
+      category?.element.open();
+      cookie?.element.setChecked(true);
+      // TODO focus btnSave
+    } else {
+      // Open first category or already open
+      const $firstCategoryContent: HTMLDivElement | null = this.#card.$el.querySelector(".cc_category .cc_category_content");
+      if ($firstCategoryContent !== null) {
+        showElement($firstCategoryContent);
+        // Add focus on first category's cookie
+        const $firstCookieInput: HTMLInputElement | null = $firstCategoryContent.querySelector('.cc_cookie input[type="checkbox"]');
+        if ($firstCookieInput !== null) {
+          $firstCookieInput.focus();
+        }
       }
     }
-    // Show btnSave
-    showElement(this.#card.btnSave);
-    hideElement(this.#card.btnAcceptAll);
   }
 
   private onCloseSettings() {
@@ -219,7 +223,14 @@ export class CookieConsent {
     this.#store.data = { version: this.#version, categories: this.#categories };
   }
 
-  private onShow() {
+  private onShow(cookieEditionData?: EventDataCookieEdition) {
+    console.log("DATA onShow -> ", cookieEditionData);
+    if (cookieEditionData !== undefined) {
+      console.log(`cc_category_${strToId(cookieEditionData.categoryName)}`);
+      console.log(`cc_cookie_${strToId(cookieEditionData.cookieName)}`);
+      // Open settings -> category and focus the cookie
+      this.#card.openSettings(cookieEditionData);
+    }
     this.show();
   }
 
@@ -239,8 +250,8 @@ export class CookieConsent {
       }
 
       // Get the category name and description
-      const categoryName: string = $script.getAttribute("data-cc-category-name")?.trim() as string;
-      const categoryDescription: string = $script.getAttribute("data-cc-category-description")?.trim() || "";
+      const categoryName: string = $script.getAttribute(ScriptTagAttributes.CategoryName)?.trim() as string;
+      const categoryDescription: string = $script.getAttribute(ScriptTagAttributes.CategoryDescription)?.trim() || "";
 
       // Retrieve category by name or creating a new one
       let category: Category =
@@ -280,6 +291,7 @@ export class CookieConsent {
             description: scriptTranslations[transKey].categoryDescription,
           };
         }
+        // Cookie translations
         if (scriptTranslations[transKey].cookieName && scriptTranslations[transKey].cookieDescription) {
           cookieTranslations[transKey] = {
             name: scriptTranslations[transKey].cookieName,
@@ -303,6 +315,7 @@ export class CookieConsent {
       }
 
       // Getting cookie or not...
+      console.log("Cookie translations ", cookieTranslations);
       const cookie: Cookie | undefined = category.cookies.get(cookieName);
       let cookieConfig: CookieConfig;
       if (!cookie) {
@@ -420,9 +433,15 @@ export class CookieConsent {
         if (cookie.translations.hasOwnProperty(this.#locale)) {
           cookie.element.setMessages(<{ name: string; description: string }>cookie.translations[this.#locale]);
         }
-        // Update iframe placeholder element message
-        if (cookie.iframePlaceholderElement) {
-          // cookie.iframePlaceholderElement.setMessages();
+        if (cookie.translations[this.#locale]?.hasOwnProperty("iframePlaceholder")) {
+          cookie.iframePlaceholderElement?.setMessages(
+            <
+              {
+                message: string;
+                btnLabel: string;
+              }
+            >cookie.translations[this.#locale]?.iframePlaceholder,
+          );
         }
       });
     });

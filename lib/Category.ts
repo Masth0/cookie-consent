@@ -51,9 +51,8 @@ export class Category {
    * @param {CookieConfig} config
    * @returns {this}
    */
-  addCookie(config: CookieConfig) {
+  addCookie(config: CookieConfig): this {
     const cookieFound: Cookie | undefined = this.#cookies.get(config.name);
-
     if (cookieFound) {
       this.mergeCookie(cookieFound, new Cookie(config));
     } else {

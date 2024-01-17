@@ -1,5 +1,5 @@
 import {createHTMLElement, HIDDEN_CLASS, hideElement, OPEN_CLASS, showElement} from "./helpers.ts";
-import EventDispatcher, {ConsentEvent} from "../EventDispatcher.ts";
+import EventDispatcher, {ConsentEvent, EventDataCookieEdition} from "../EventDispatcher.ts";
 import {CategoryElement} from "./CategoryElement.ts";
 import { CcElement } from "./CcElement.ts";
 
@@ -175,13 +175,25 @@ export class CardElement extends CcElement<CardMessages> {
   }
 
   // Open/Close the list of cookies to let user makes his choices
-  private toggleSettings() {
+  public toggleSettings() {
     if (this.#body.classList.contains(HIDDEN_CLASS)) {
-      showElement(this.#body);
-      this.#dispatcher.dispatch(ConsentEvent.OpenSettings);
+      this.openSettings();
     } else {
       hideElement(this.#body);
       this.#dispatcher.dispatch(ConsentEvent.CloseSettings);
     }
+  }
+
+  public openSettings(cookieEditionData?: EventDataCookieEdition) {
+    showElement(this.#body);
+    // Show btnSave
+    showElement(this.btnSave);
+    hideElement(this.btnAcceptAll);
+    this.#dispatcher.dispatch(ConsentEvent.OpenSettings, cookieEditionData);
+  }
+
+  public hideSettings() {
+    hideElement(this.#body);
+    this.#dispatcher.dispatch(ConsentEvent.CloseSettings);
   }
 }

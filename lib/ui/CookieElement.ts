@@ -58,13 +58,12 @@ export class CookieElement extends CcElement<CookieMessages> {
             this.#label.innerHTML = messages.name;
             this.messages.name = messages.name;
         }
-        
+
         if (messages.description !== this.messages.description) {
             this.#description.innerHTML = messages.description;
             this.messages.description = messages.description
         }
     }
-    
     setChecked(value: boolean) {
         this.#input.checked = value;
     }
