@@ -53,10 +53,24 @@ if (btnConsent) {
 }
 
 const btnLocales: NodeListOf<HTMLButtonElement> = document.querySelectorAll('.js-btn-locale');
+
+function btnLocalesActiveClass(btnsList: NodeListOf<HTMLElement>, btnClicked: HTMLElement, activeClass: string = 'active') {
+    for (const btn of btnsList) {
+        if (btn === btnClicked) {
+            btn.classList.add(activeClass);
+        } else {
+            btn.classList.remove(activeClass);
+        }
+    }
+}
+
 for (const btnLocale of btnLocales) {
     btnLocale.addEventListener("click", function(e) {
         e.preventDefault();
         const locale = btnLocale.dataset.language?.trim();
-        if (locale) consent.locale = locale;
+        if (locale) {
+            consent.locale = locale;
+            btnLocalesActiveClass(btnLocales, this);
+        }
     });
 }

@@ -1,3 +1,8 @@
+body {
+    background-color: #1d1d26;
+    color: #ccc;
+}
+
 @keyframes cc-open-animation {
     from {
         opacity: 0;
@@ -93,7 +98,9 @@
     padding: 0;
     border-radius: var(--cc-radius);
     background-color: var(--cc-card-bg);
+    color: var(--cc-color-text);
     box-shadow: var(--cc-card-shadow);
+    z-index: 9999;
 }
 
 /* Topbar */
