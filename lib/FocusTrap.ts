@@ -92,6 +92,15 @@ export default class FocusTrap {
       }
     }
   }
+  
+  focus(element: HTMLElement) {
+    for (const target of this.#targets) {
+      if (target === element) {
+        element.focus();
+        break;
+      }
+    }
+  }
 
   listen() {
     if (!this.#listening) {

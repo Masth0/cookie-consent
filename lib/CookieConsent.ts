@@ -131,12 +131,12 @@ export class CookieConsent {
   }
 
   private onOpenSettings(cookieEditionData?: EventDataCookieEdition) {
+    // Check according cookie in cookieEditionData
     if (cookieEditionData !== undefined) {
       const category: Category|undefined = this.#categories.get(cookieEditionData.categoryName);
       const cookie: Cookie | undefined = category?.cookies.get(cookieEditionData.cookieName);
       category?.element.open();
       cookie?.element.setChecked(true);
-      // TODO focus btnSave
     } else {
       // Open first category or already open
       const $firstCategoryContent: HTMLDivElement | null = this.#card.$el.querySelector(".cc_category .cc_category_content");
@@ -231,7 +231,7 @@ export class CookieConsent {
       // Open settings -> category and focus the cookie
       this.#card.openSettings(cookieEditionData);
     }
-    this.show();
+    this.show(this.#card.btnSave);
   }
 
   private createCategoriesFromScriptTags(selector: string): Map<string, Category> {
@@ -447,10 +447,14 @@ export class CookieConsent {
     });
   }
 
-  show() {
+  show(elementToFocused?: HTMLElement) {
     showElement(this.#card.$el);
     this.#focusTrap.updateTargets();
-    this.#focusTrap.firstTarget?.focus();
+    if (elementToFocused) {
+      this.#focusTrap.focus(elementToFocused);
+    } else {
+      this.#focusTrap.firstTarget?.focus();
+    }
     this.#focusTrap.listen();
   }
 
