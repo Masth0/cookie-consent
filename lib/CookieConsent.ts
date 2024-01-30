@@ -383,20 +383,27 @@ export class CookieConsent {
    * @private
    */
   private toggleCookies(): Promise<void[]> {
-    let cookiePromises: Promise<void>[] = [];
+    let cookiePromises: {func: () => void}[] = [];
 
     this.#categories.forEach((category: Category) => {
       category.cookies.forEach((cookie: Cookie) => {
+        
+        console.log(cookie.name, cookie.isRevocable && cookie.isAccepted && cookie.isEnabled);
         if (cookie.isRevocable && cookie.isAccepted && !cookie.isEnabled) {
-          cookiePromises.push(cookie.enable());
-        } else {
-          // If the cookie was previously accepted and enabled refresh, we need to reload to make the changes
-          cookiePromises.push(cookie.disable());
+          cookiePromises.push({func: cookie.enable.bind(cookie)});
+        }
+        console.log(cookie.name, cookie.isRevocable && cookie.isAccepted && cookie.isEnabled);
+
+        if (cookie.isRevocable && cookie.isAccepted && cookie.isEnabled) {
+          // If the cookie was previously accepted, we need to reload to make the changes
+          console.log('Cookie ', cookie.isEnabled, cookie);
+          cookiePromises.push({func: cookie.disable.bind(cookie)});
           if (!this.#forceToReload) this.#forceToReload = true;
         }
+        
       });
     });
-    return Promise.all(cookiePromises);
+    return Promise.all(cookiePromises.map((cp) => cp.func()));
   }
 
   enableAllCookies() {

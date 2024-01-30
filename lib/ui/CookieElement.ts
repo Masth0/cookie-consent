@@ -1,6 +1,6 @@
 import {ANIMATION_DISABLED_CLASS, createHTMLElement, strToId} from "./helpers.ts";
 import EventDispatcher, {ConsentEvent} from "../EventDispatcher.ts";
-import { CcElement } from "./CcElement.ts";
+import {CcElement} from "./CcElement.ts";
 
 /* Cookie HTML
 <div class="cc_cookie">
@@ -66,6 +66,7 @@ export class CookieElement extends CcElement<CookieMessages> {
     }
     setChecked(value: boolean) {
         this.#input.checked = value;
+        this.#dispatcher.dispatch<[string, boolean]>(ConsentEvent.CookieChange, this.#name, this.#input.checked);
     }
 
     private addEventListeners() {

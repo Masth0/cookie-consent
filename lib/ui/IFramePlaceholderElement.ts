@@ -25,7 +25,7 @@ export class IFramePlaceholderElement extends CcElement<IFramePlaceholderMessage
   };
 
   constructor(cookie: Cookie) {
-    super({"class": "cc_iframe_placeholder"});
+    super({"class": `cc_iframe_placeholder cc_${strToId(cookie.name)}`});
     this.#cookie = cookie;
     this.#inner = createHTMLElement<HTMLDivElement>("DIV", { "class": "cc_placeholder_inner" });
     this.#message = createHTMLElement<HTMLParagraphElement>('P', {"class": "cc_placeholder_message"});

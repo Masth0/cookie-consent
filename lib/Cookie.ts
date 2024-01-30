@@ -4,6 +4,7 @@ import { CookieElement } from "./ui/CookieElement.ts";
 import EventDispatcher, { ConsentEvent } from "./EventDispatcher.ts";
 import { IFramePlaceholderElement, IFramePlaceholderMessages } from "./ui/IFramePlaceholderElement.ts";
 import { ScriptTagAttributes } from "./CookieConsent.ts";
+import {strToId} from "./ui/helpers.ts";
 
 export type CookieTranslations = {
   [key in LanguageCode | string]?: Pick<Cookie, "name" | "description"> & { iframePlaceholder?: IFramePlaceholderMessages };
@@ -121,11 +122,18 @@ export class Cookie {
     }
   }
 
-  displayIFramePlaceholder() {
+  showIFramePlaceholder() {
     for (const iframe of this.#iframes) {
       if (this.iframePlaceholderElement) {
         iframe.insertAdjacentElement("beforebegin", this.iframePlaceholderElement.$el);
       }
+    }
+  }
+  
+  removeIFramePlaceholder() {
+    const placeholders = document.querySelectorAll(`.cc_iframe_placeholder.cc_${strToId(this.name)}`);
+    for (const placeholder of placeholders) {
+      placeholder.remove();
     }
   }
 
@@ -137,7 +145,7 @@ export class Cookie {
       if (this.isEnabled) reject("Cookie " + this.name + " is already enabled");
       let newScriptTags: HTMLScriptElement[] = [];
       let newIframesTags: HTMLIFrameElement[] = [];
-
+      
       if (this.#scripts) {
         this.#scripts.forEach((script) => {
           const copy = this.createScriptTag(script);
@@ -163,6 +171,7 @@ export class Cookie {
       }
 
       this.#enabled = true;
+      this.removeIFramePlaceholder();
       resolve();
     });
   }
@@ -183,6 +192,7 @@ export class Cookie {
 
         this.#enabled = false;
         this.#accepted = false;
+        this.showIFramePlaceholder();
       }
       resolve();
     });
@@ -248,7 +258,10 @@ export class Cookie {
     }
 
     this.#iframes = [...this.#iframes, ...iframes];
-    this.displayIFramePlaceholder();
+    
+    if (!this.accepted) {
+      this.showIFramePlaceholder();
+    }
   }
 
   addTokens(tokens: string[]): string[] {
@@ -267,13 +280,11 @@ export class Cookie {
    * @param {CookieTranslations} translations
    */
   addTranslations(translations: CookieTranslations) {
-    console.log("ADD TRANSLATIONS ", translations);
     for (const translationsKey in translations) {
       if (!this.translations.hasOwnProperty(translationsKey)) {
         this.translations[translationsKey] = translations[translationsKey];
       }
     }
-    console.log("AFTER ADD TRANSLATIONS ", this.translations);
   }
 
   private onCookieChange(name: string, checked: boolean) {
