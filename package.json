@@ -20,20 +20,19 @@
     "build": "rm -rf ./dist/* && npm run prettier && npm run build:es6 && npm run build:es5 && cp ./src/style.css dist/style.css"
   },
   "devDependencies": {
-    "@babel/cli": "^7.21.5",
-    "@babel/core": "^7.21.8",
-    "@babel/plugin-transform-runtime": "^7.22.15",
-    "@babel/preset-env": "^7.21.5",
-    "@rollup/plugin-babel": "^6.0.3",
-    "prettier": "3.0.2",
-    "terser": "^5.20.0",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.9",
-    "vite-plugin-dts": "^3.6.0"
+    "@babel/cli": "^7.23.9",
+    "@babel/core": "^7.23.9",
+    "@babel/plugin-transform-runtime": "^7.23.9",
+    "@babel/preset-env": "^7.23.9",
+    "@rollup/plugin-babel": "^6.0.4",
+    "prettier": "^3.2.4",
+    "terser": "^5.27.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vite-plugin-dts": "^3.7.2"
   },
   "dependencies": {
-    "core-js": "^3.30.2",
-    "focus-trap": "^7.4.3"
+    "core-js": "^3.35.1"
   },
   "prettier": {
     "printWidth": 150,
