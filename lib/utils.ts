@@ -8,7 +8,7 @@ export function getAllCookies(): Array<{ name: string; value: string }> {
 }
 
 export function isAttributeValid(attrValue: undefined | null | string): boolean {
-  return attrValue !== "" || (attrValue !== undefined && attrValue !== null);
+  return attrValue !== undefined && attrValue !== "" && attrValue !== "NaN" && attrValue !== null;
 }
 
 export function arrayToMap<T extends { [key: string]: any }>(src: T[], property?: string): Map<string, T> {
@@ -40,36 +40,4 @@ export function checkRequiredTagAttributes(tag: HTMLScriptElement | HTMLIFrameEl
   }
 
   return attrPresents.length === requiredAttributes.length;
-}
-
-/**
- * TODO move to Cookie
- * Add "src" attribute from "data-cc-src"
- * Attribute "data-cc-name" is mandatory, and it must have the Cookie.name as value
- * @param {string} cookieName
- */
-export function enableCookieIframes(cookieName: string) {
-  const $iframes: NodeListOf<HTMLIFrameElement> = document.querySelectorAll(`iframe[data-cc-name="${cookieName}"]`);
-
-  for (const $iframe of $iframes) {
-    if (!$iframe.hasAttribute("src") && $iframe.dataset.ccSrc) {
-      $iframe.setAttribute("src", $iframe.dataset.ccSrc);
-    }
-  }
-}
-
-/**
- * TODO move to Cookie
- * Add "data-cc-src" attribute from "src"
- * Attribute "data-cc-name" is mandatory, and it must have the Cookie.name as value
- * @param {string} cookieName
- */
-export function disableCookieIframes(cookieName: string) {
-  const $iframes: NodeListOf<HTMLIFrameElement> = document.querySelectorAll(`iframe[data-cc-name="${cookieName}"]`);
-
-  for (const $iframe of $iframes) {
-    if ($iframe.hasAttribute("src")) {
-      $iframe.setAttribute("data-cc-src", $iframe.src);
-    }
-  }
 }

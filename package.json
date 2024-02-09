@@ -4,13 +4,15 @@
   "license": "MIT",
   "private": true,
   "version": "2.0.0",
-  "type": "module",
   "files": [
     "dist"
   ],
   "main": "",
   "module": "",
   "scripts": {
+    "pretest": "tsc --incremental -p tests/tsconfig.json",
+    "test:ui": "playwright test --ui",
+    "test": "playwright test -c tests-out",
     "prettier": "prettier \"./lib/*.ts\" --write",
     "types": "tsc ./lib/*.ts --declaration --emitDeclarationOnly --allowImportingTsExtensions --outDir types",
     "dev": "vite",
@@ -24,7 +26,11 @@
     "@babel/core": "^7.23.9",
     "@babel/plugin-transform-runtime": "^7.23.9",
     "@babel/preset-env": "^7.23.9",
+    "@babel/preset-typescript": "^7.23.3",
+    "@playwright/test": "^1.41.2",
     "@rollup/plugin-babel": "^6.0.4",
+    "@types/node": "^20.11.13",
+    "playwright": "^1.41.2",
     "prettier": "^3.2.4",
     "terser": "^5.27.0",
     "typescript": "^5.3.3",
