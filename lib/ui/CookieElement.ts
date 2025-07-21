@@ -28,6 +28,10 @@ export class CookieElement extends CcElement<CookieMessages> {
         name: "",
         description: ""
     };
+    
+    get input(): HTMLInputElement {
+        return this.#input;
+    }
 
     constructor(name: string) {
         super({ "class": "cc_cookie" });

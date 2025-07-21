@@ -88,8 +88,6 @@ body {
 .cc_card {
     font-family: arial, sans-serif;
     position: fixed;
-    bottom: 0;
-    left: 0;
     width: 100%;
     max-width: 700px;
     max-height: calc(100vh - (var(--cc-gap) * 2));
@@ -103,9 +101,25 @@ body {
     z-index: 9999;
 }
 
+.cc-center-bottom {
+    bottom: var(--cc-gap);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.cc-center {
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
 /* Topbar */
 .cc_topbar {
     text-align: right;
+    position: sticky;
+    top: 0;
+    background-color: var(--cc-card-bg);
+    z-index: 8;
 }
 
 /* Header */
@@ -461,8 +475,8 @@ body {
 
 @media screen and (min-width: 700px) {
     .cc_card {
-        left: var(--cc-gap);
-        bottom: var(--cc-gap);
+        /*left: var(--cc-gap);*/
+        /*bottom: var(--cc-gap);*/
         width: calc(100% - var(--cc-gap));
     }
 }

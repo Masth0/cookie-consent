@@ -6,6 +6,7 @@ import { Cookie } from "../lib/Cookie.ts";
 import { getCookieValue } from "../lib/utils.ts";
 
 (<any>window).getCookieValue = getCookieValue;
+console.log(getCookieValue);
 window.addEventListener('load', () => {
 
 // To set messages

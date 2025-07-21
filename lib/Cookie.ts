@@ -85,6 +85,10 @@ export class Cookie {
   get element(): CookieElement {
     return this.#element;
   }
+  
+  get input(): HTMLInputElement {
+    return this.#element.input;
+  }
 
   get iframePlaceholderElement(): IFramePlaceholderElement | undefined {
     return this.#iframePlaceholderElement;

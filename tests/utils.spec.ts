@@ -34,15 +34,12 @@ test.describe('Test utils functions', () => {
       name: '_cookie_consent',
       value: cookieValue,
       path: '/',
-      domain: 'localhost:8888',
+      domain: 'localhost',
       expires: -1
     }])
     await page.waitForLoadState("load")
-    await page.exposeFunction('getCookieValue', getCookieValue)
     
     const result = await page.evaluate(`(async () => {
-      const { getCookieValue } = await import('../lib/utils.ts');
-      console.log('TOTO', getCookieValue)
       return Promise.resolve(getCookieValue('_cookie_consent'))
     })()`);
     

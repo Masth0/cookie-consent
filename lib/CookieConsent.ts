@@ -137,6 +137,7 @@ export class CookieConsent {
       const cookie: Cookie | undefined = category?.cookies.get(cookieEditionData.cookieName);
       category?.element.open();
       cookie?.element.setChecked(true);
+      cookie?.element.input.focus();
     } else {
       // Open first category or already open
       const $firstCategoryContent: HTMLDivElement | null = this.#card.$el.querySelector(".cc_category .cc_category_content");
@@ -362,7 +363,7 @@ export class CookieConsent {
         category.element.addCookieElement(cookie.element);
       });
     });
-
+    this.#card.$el.classList.add("cc-center");
     // Set messages into html elements
     document.body.appendChild(this.#card.$el);
   }
